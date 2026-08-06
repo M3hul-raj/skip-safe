@@ -831,14 +831,16 @@ html, body {
 .cal-dots {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 5px;
 }
 
 .cal-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
   transition: transform 0.1s ease;
+  cursor: pointer;
+  position: relative;
 }
 
 .cal-dot:active { transform: scale(1.4); }
@@ -848,10 +850,148 @@ html, body {
 .cal-dot.cancelled { background: var(--surface-3); border: 1px dashed var(--text-3); }
 .cal-dot.future    { background: var(--surface-3); }
 
-/* ===== CANCEL ROW ===== */
-.cancel-row {
+.cal-dot.selected {
+  outline: 2px solid #E8E8E8;
+  outline-offset: 1px;
+  transform: scale(1.15);
+}
+
+.cal-dot.extra {
+  background: #00E5FF;
+}
+
+.cal-dot.extra.absent {
+  background: var(--danger);
+  border: 2px solid #00E5FF;
+}
+
+/* ===== DOT INFO CARD ===== */
+.dot-info {
+  display: none;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-sm);
+  margin-top: 14px;
+}
+
+.dot-info.active {
+  display: block;
+}
+
+.dot-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.dot-info-date {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dot-info-period {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.dot-info-close {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-2);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.dot-info-status {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.dot-info-status.present { color: var(--safe); }
+.dot-info-status.absent { color: var(--danger); }
+.dot-info-status.cancelled { color: var(--text-3); }
+.dot-info-status.future { color: var(--text-2); }
+.dot-info-status.extra { color: #00E5FF; }
+
+.dot-info-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dot-action {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 8px 14px;
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  transition: all 0.12s;
+  border: 1px solid var(--border-2);
+  background: transparent;
+  color: var(--text-2);
+}
+
+.dot-action:active {
+  transform: scale(0.95);
+}
+
+.dot-action.danger {
+  border-color: rgba(255,59,59,0.3);
+  color: var(--danger);
+}
+
+.dot-action.safe {
+  border-color: rgba(0,255,136,0.3);
+  color: var(--safe);
+}
+
+.dot-action.warn {
+  border-color: rgba(255,184,0,0.3);
+  color: var(--warn);
+}
+
+/* ===== EXTRA CLASS ===== */
+.extra-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.extra-row .cancel-input {
+  flex: 1;
+}
+
+.extra-btn {
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid rgba(0,229,255,0.3);
+  border-radius: var(--r-sm);
+  color: #00E5FF;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s;
+}
+
+.extra-btn:active {
+  background: rgba(0,229,255,0.1);
+  transform: scale(0.95);
 }
 
 .cancel-input {
@@ -874,25 +1014,6 @@ html, body {
 /* Chrome date picker fix */
 ::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
-}
-
-.cancel-btn {
-  padding: 10px 14px;
-  background: var(--surface-2);
-  border: 1px solid var(--border-2);
-  border-radius: var(--r-sm);
-  color: var(--text-2);
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.12s;
-}
-
-.cancel-btn:active {
-  background: var(--surface-3);
-  color: var(--text);
 }
 
 /* ===== TOAST ===== */

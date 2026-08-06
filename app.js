@@ -67,10 +67,11 @@ const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 
 // ===== STATE =====
 
-let state = { absences: new Set(), cancellations: new Set(), customHolidays: new Set() };
+let state = { absences: new Set(), cancellations: new Set(), customHolidays: new Set(), extras: new Set() };
 let viewDate   = new Date();
 let activeView = 'today';
 let _toastTmr  = null;
+let _selectedDot = null;
 
 
 // ===== PERSISTENCE =====
@@ -83,6 +84,7 @@ function load() {
       state.absences       = new Set(d.a || []);
       state.cancellations  = new Set(d.c || []);
       state.customHolidays = new Set(d.h || []);
+      state.extras         = new Set(d.e || []);
     }
   } catch (_) { /* first launch */ }
 }
@@ -92,6 +94,7 @@ function save() {
     a: [...state.absences],
     c: [...state.cancellations],
     h: [...state.customHolidays],
+    e: [...state.extras],
   }));
 }
 
@@ -135,6 +138,11 @@ function getScheduled(subj, from, to) {
           if (!state.cancellations.has(k)) out.push({ ds, period: sl.period, k });
         }
       }
+    }
+    // Also include extra classes on this date (extras work on any day, even weekends/holidays)
+    const ek = K(fmt(d), subj, 'EXTRA');
+    if (state.extras.has(ek) && !state.cancellations.has(ek) && fmt(d) >= from && fmt(d) <= to) {
+      out.push({ ds: fmt(d), period: 'EXTRA', k: ek, isExtra: true });
     }
     d = addDays(d, 1);
   }
@@ -190,7 +198,7 @@ function renderToday() {
   const holBtn    = document.getElementById('holiday-toggle');
 
   // Holiday button label
-  holBtn.textContent = isHoliday(ds) ? '✕ Remove holiday' : '+ Mark as holiday';
+  holBtn.textContent = isHoliday(ds) ? '✕ Remove day off' : '+ Mark day off';
 
   // Determine view state
   const isHol      = !isWeekend(viewDate) && inSemester(ds) && isHoliday(ds);
@@ -339,11 +347,11 @@ function openDetail(code) {
   // Calendar history
   renderCalendar(code);
 
-  // Cancel date input constraints
-  const cd = document.getElementById('cancel-date');
-  cd.min = SEMESTER_START;
-  cd.max = SEMESTER_END;
-  cd.value = fmt(new Date());
+  // Extra class date input constraints
+  const ed = document.getElementById('extra-date');
+  ed.min = SEMESTER_START;
+  ed.max = SEMESTER_END;
+  ed.value = fmt(new Date());
 
   modal.dataset.subject = code;
   modal.classList.add('active');
@@ -358,6 +366,7 @@ function renderCalendar(code) {
   const end = parse(SEMESTER_END);
   while (d <= end) {
     const ds = fmt(d);
+    // Regular timetable classes
     if (!isWeekend(d) && !isHoliday(ds) && inSemester(ds)) {
       for (const sl of (TIMETABLE[d.getDay()] || [])) {
         if (sl.subject === code) {
@@ -367,9 +376,21 @@ function renderCalendar(code) {
             cancelled: state.cancellations.has(k),
             absent: state.absences.has(k),
             future: ds > today,
+            isExtra: false,
           });
         }
       }
+    }
+    // Extra classes (can be on any day)
+    const ek = K(ds, code, 'EXTRA');
+    if (state.extras.has(ek)) {
+      slots.push({
+        ds, period: 'EXTRA', k: ek,
+        cancelled: state.cancellations.has(ek),
+        absent: state.absences.has(ek),
+        future: ds > today,
+        isExtra: true,
+      });
     }
     d = addDays(d, 1);
   }
@@ -387,19 +408,150 @@ function renderCalendar(code) {
       <div class="cal-month-name">${MONTH_SHORT[m-1]} ${mk.split('-')[0]}</div>
       <div class="cal-dots">${sl.map(s => {
         let c = 'cal-dot';
+        if (s.isExtra) c += ' extra';
         if (s.cancelled) c += ' cancelled';
         else if (s.absent) c += ' absent';
         else if (s.future) c += ' future';
         else c += ' present';
-        return `<span class="${c}" title="${s.ds} P${s.period}"></span>`;
+        return `<span class="${c}" data-k="${s.k}" data-ds="${s.ds}" data-period="${s.period}" data-extra="${s.isExtra}" onclick="showDotInfo(this)"></span>`;
       }).join('')}</div>
     </div>`;
   }).join('');
+
+  // Clear any previous selection
+  closeDotInfo();
 }
 
 function closeModal() {
   document.getElementById('subject-modal').classList.remove('active');
   document.body.style.overflow = '';
+  closeDotInfo();
+}
+
+
+// ===== DOT INTERACTION =====
+
+function showDotInfo(el) {
+  // Deselect previous
+  if (_selectedDot) _selectedDot.classList.remove('selected');
+  _selectedDot = el;
+  el.classList.add('selected');
+
+  const k      = el.dataset.k;
+  const ds     = el.dataset.ds;
+  const period = el.dataset.period;
+  const isExtra = el.dataset.extra === 'true';
+  const d      = parse(ds);
+  const today  = fmt(new Date());
+
+  const dayName  = DAY_NAMES[d.getDay()];
+  const dateStr  = `${dayName}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`;
+  const perLabel = isExtra ? 'Extra Class' : `Period ${period}`;
+
+  // Determine status
+  let status, statusClass, statusIcon;
+  if (state.cancellations.has(k)) {
+    status = 'Cancelled'; statusClass = 'cancelled'; statusIcon = '⊘';
+  } else if (state.absences.has(k)) {
+    status = 'Skipped'; statusClass = 'absent'; statusIcon = '✗';
+  } else if (ds > today) {
+    status = 'Upcoming'; statusClass = 'future'; statusIcon = '○';
+  } else {
+    status = 'Attended'; statusClass = 'present'; statusIcon = '✓';
+  }
+  if (isExtra && !state.cancellations.has(k)) statusClass = 'extra';
+
+  // Build action buttons
+  let actions = '';
+  if (state.cancellations.has(k)) {
+    actions = `<button class="dot-action safe" onclick="undoDotCancel('${k}')">Undo Cancel</button>`;
+    if (isExtra) actions += ` <button class="dot-action danger" onclick="removeDotExtra('${k}')">Remove Extra</button>`;
+  } else if (state.absences.has(k)) {
+    actions = `<button class="dot-action safe" onclick="undoDotSkip('${k}')">Undo Skip</button>
+               <button class="dot-action warn" onclick="toggleDotCancel('${k}')">Cancel Class</button>`;
+  } else if (ds > today) {
+    actions = `<button class="dot-action warn" onclick="toggleDotCancel('${k}')">Pre-cancel</button>`;
+    if (isExtra) actions += ` <button class="dot-action danger" onclick="removeDotExtra('${k}')">Remove Extra</button>`;
+  } else {
+    // Attended (past, not absent, not cancelled)
+    actions = `<button class="dot-action warn" onclick="toggleDotCancel('${k}')">Cancel Class</button>`;
+    if (isExtra) actions += ` <button class="dot-action danger" onclick="removeDotExtra('${k}')">Remove Extra</button>`;
+  }
+
+  const info = document.getElementById('dot-info');
+  info.innerHTML = `
+    <div class="dot-info-header">
+      <div>
+        <div class="dot-info-date">${dateStr}</div>
+        <div class="dot-info-period">${perLabel}</div>
+      </div>
+      <button class="dot-info-close" onclick="closeDotInfo()">✕</button>
+    </div>
+    <div class="dot-info-status ${statusClass}">${statusIcon} ${status}</div>
+    <div class="dot-info-actions">${actions}</div>`;
+  info.classList.add('active');
+
+  // Scroll the info card into view
+  info.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeDotInfo() {
+  if (_selectedDot) { _selectedDot.classList.remove('selected'); _selectedDot = null; }
+  const info = document.getElementById('dot-info');
+  if (info) { info.classList.remove('active'); info.innerHTML = ''; }
+}
+
+function toggleDotCancel(k) {
+  state.cancellations.add(k);
+  state.absences.delete(k);
+  save();
+  toast('Class cancelled');
+  const modal = document.getElementById('subject-modal');
+  openDetail(modal.dataset.subject);
+}
+
+function undoDotCancel(k) {
+  state.cancellations.delete(k);
+  save();
+  toast('Cancel undone');
+  const modal = document.getElementById('subject-modal');
+  openDetail(modal.dataset.subject);
+}
+
+function undoDotSkip(k) {
+  state.absences.delete(k);
+  save();
+  toast('Skip undone');
+  const modal = document.getElementById('subject-modal');
+  openDetail(modal.dataset.subject);
+}
+
+function removeDotExtra(k) {
+  state.extras.delete(k);
+  state.absences.delete(k);
+  state.cancellations.delete(k);
+  save();
+  toast('Extra class removed');
+  const modal = document.getElementById('subject-modal');
+  openDetail(modal.dataset.subject);
+}
+
+function addExtraClass() {
+  const modal = document.getElementById('subject-modal');
+  const code  = modal.dataset.subject;
+  const ds    = document.getElementById('extra-date').value;
+
+  if (!ds) { toast('Select a date'); return; }
+
+  const ek = K(ds, code, 'EXTRA');
+  if (state.extras.has(ek)) { toast('Extra already added for this date'); return; }
+
+  state.extras.add(ek);
+  save();
+
+  const d = parse(ds);
+  toast(`Extra class added — ${DAY_NAMES[d.getDay()]}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`);
+  openDetail(code);
 }
 
 
@@ -442,49 +594,20 @@ function toggleHoliday() {
   if (PRESET_HOLIDAYS.has(ds)) { toast('Official holiday \u2014 can\u2019t remove'); return; }
   if (state.customHolidays.has(ds)) {
     state.customHolidays.delete(ds);
-    toast('Holiday removed');
+    toast('Day off removed');
   } else {
     state.customHolidays.add(ds);
     // Remove absences for this day (classes weren't held)
     for (const sl of (TIMETABLE[viewDate.getDay()] || [])) {
       state.absences.delete(K(ds, sl.subject, sl.period));
     }
-    toast('Marked as holiday');
+    toast('Marked as day off');
   }
   save();
   renderToday();
 }
 
-function cancelClass() {
-  const modal = document.getElementById('subject-modal');
-  const code  = modal.dataset.subject;
-  const ds    = document.getElementById('cancel-date').value;
-
-  if (!ds) { toast('Select a date'); return; }
-
-  const d     = parse(ds);
-  const slots = (TIMETABLE[d.getDay()] || []).filter(s => s.subject === code);
-
-  if (slots.length === 0) { toast(`No ${SUBJECTS[code].short} class on ${DAY_NAMES[d.getDay()]}`); return; }
-
-  let n = 0;
-  slots.forEach(sl => {
-    const k = K(ds, code, sl.period);
-    if (!state.cancellations.has(k)) {
-      state.cancellations.add(k);
-      state.absences.delete(k);
-      n++;
-    }
-  });
-
-  if (n > 0) {
-    save();
-    toast(`${n} class${n > 1 ? 'es' : ''} cancelled`);
-    openDetail(code);
-  } else {
-    toast('Already cancelled');
-  }
-}
+// cancelClass() removed — replaced by dot-based toggleDotCancel()
 
 
 // ===== EXPORT / IMPORT =====
@@ -494,8 +617,9 @@ function exportBackup() {
     absences: [...state.absences],
     cancellations: [...state.cancellations],
     customHolidays: [...state.customHolidays],
+    extras: [...state.extras],
     exported: new Date().toISOString(),
-    v: 1,
+    v: 2,
   }, null, 2)], { type: 'application/json' });
 
   const a = document.createElement('a');
@@ -516,6 +640,7 @@ function importBackup(file) {
       state.absences       = new Set(d.absences || []);
       state.cancellations  = new Set(d.cancellations || []);
       state.customHolidays = new Set(d.customHolidays || []);
+      state.extras         = new Set(d.extras || []);
       save();
       toast('Backup restored');
       if (activeView === 'dashboard') renderDash(); else renderToday();
@@ -557,7 +682,9 @@ function init() {
   // Modal
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('modal-overlay').addEventListener('click', closeModal);
-  document.getElementById('cancel-btn').addEventListener('click', cancelClass);
+
+  // Extra class
+  document.getElementById('extra-btn').addEventListener('click', addExtraClass);
 
   // Export / Import
   document.getElementById('export-btn').addEventListener('click', exportBackup);
