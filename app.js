@@ -16,13 +16,13 @@ const PRESET_HOLIDAYS = new Set([
 ]);
 
 const SUBJECTS = {
-  MT204: { name: 'Constitution of India', code: 'MT204', short: 'COI', credits: 0, teacher: '\u2014', color: '#B388FF' },
-  MA501: { name: 'Functional Analysis', code: 'MA501', short: 'FA', credits: 4, teacher: 'Dr. S. Padhi', color: '#00E5FF' },
-  MA502: { name: 'Number Theory', code: 'MA502', short: 'NT', credits: 4, teacher: 'Dr. N. Das', color: '#76FF03' },
-  CA601: { name: 'Computer Graphics', code: 'CA601', short: 'CG', credits: 3, teacher: 'Dr. K. K. Senapati', color: '#FFD740' },
-  CA630: { name: 'Crypto & Network Security', code: 'CA630', short: 'CNS', credits: 3, teacher: 'Dr. A. Bera', color: '#FF6E40' },
-  CA635: { name: 'Natural Language Processing', code: 'CA635', short: 'NLP', credits: 3, teacher: 'Dr. Shruti Garg', color: '#FF4081' },
-  CA602: { name: 'CG Lab', code: 'CA602', short: 'CG Lab', credits: 1.5, teacher: 'Dr. K. K. Senapati', color: '#FFAB40', isLab: true },
+  MT204: { name: 'Constitution of India', code: 'MT204', short: 'COI', credits: 0, teacher: '\u2014', color: '#A89ACA' },
+  MA501: { name: 'Functional Analysis', code: 'MA501', short: 'FA', credits: 4, teacher: 'Dr. S. Padhi', color: '#7AAFBE' },
+  MA502: { name: 'Number Theory', code: 'MA502', short: 'NT', credits: 4, teacher: 'Dr. N. Das', color: '#8FB87A' },
+  CA601: { name: 'Computer Graphics', code: 'CA601', short: 'CG', credits: 3, teacher: 'Dr. K. K. Senapati', color: '#C4A55A' },
+  CA630: { name: 'Crypto & Network Security', code: 'CA630', short: 'CNS', credits: 3, teacher: 'Dr. A. Bera', color: '#C4805A' },
+  CA635: { name: 'Natural Language Processing', code: 'CA635', short: 'NLP', credits: 3, teacher: 'Dr. Shruti Garg', color: '#BE7A8E' },
+  CA602: { name: 'CG Lab', code: 'CA602', short: 'CG Lab', credits: 1.5, teacher: 'Dr. K. K. Senapati', color: '#B09460', isLab: true },
 };
 
 // Day of week: 0=Sun, 1=Mon, ..., 6=Sat
@@ -426,6 +426,9 @@ function closeModal() {
   document.getElementById('subject-modal').classList.remove('active');
   document.body.style.overflow = '';
   closeDotInfo();
+  // Re-render the active view so dashboard/today reflect any modal changes
+  if (activeView === 'dashboard') renderDash();
+  else renderToday();
 }
 
 
@@ -474,7 +477,8 @@ function showDotInfo(el) {
     if (isExtra) actions += ` <button class="dot-action danger" onclick="removeDotExtra('${k}')">Remove Extra</button>`;
   } else {
     // Attended (past, not absent, not cancelled)
-    actions = `<button class="dot-action warn" onclick="toggleDotCancel('${k}')">Cancel Class</button>`;
+    actions = `<button class="dot-action danger" onclick="markDotAbsent('${k}')">Mark Absent</button>
+               <button class="dot-action warn" onclick="toggleDotCancel('${k}')">Cancel Class</button>`;
     if (isExtra) actions += ` <button class="dot-action danger" onclick="removeDotExtra('${k}')">Remove Extra</button>`;
   }
 
@@ -522,6 +526,14 @@ function undoDotSkip(k) {
   state.absences.delete(k);
   save();
   toast('Skip undone');
+  const modal = document.getElementById('subject-modal');
+  openDetail(modal.dataset.subject);
+}
+
+function markDotAbsent(k) {
+  state.absences.add(k);
+  save();
+  toast('Marked as absent');
   const modal = document.getElementById('subject-modal');
   openDetail(modal.dataset.subject);
 }

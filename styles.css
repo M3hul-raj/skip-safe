@@ -1,5 +1,5 @@
 /* =============================================
-   SKIP SAFE — Nothing-Inspired Dark Theme
+   SKIP SAFE — Refined Dark Theme
    AMOLED-optimized · Mobile-first · Offline PWA
    ============================================= */
 
@@ -13,22 +13,25 @@
 
 :root {
   --bg: #000000;
-  --surface: #111111;
-  --surface-2: #1A1A1A;
-  --surface-3: #222222;
-  --border: rgba(255,255,255,0.06);
-  --border-2: rgba(255,255,255,0.10);
+  --surface: #0E0E0D;
+  --surface-2: #171715;
+  --surface-3: #201F1D;
+  --border: rgba(200,180,140,0.06);
+  --border-2: rgba(200,180,140,0.12);
 
-  --text: #E8E8E8;
-  --text-2: rgba(255,255,255,0.55);
-  --text-3: rgba(255,255,255,0.30);
+  --text: #E8E4DD;
+  --text-2: rgba(232,228,221,0.50);
+  --text-3: rgba(232,228,221,0.28);
 
-  --safe: #00FF88;
-  --safe-dim: rgba(0,255,136,0.10);
-  --warn: #FFB800;
-  --warn-dim: rgba(255,184,0,0.10);
-  --danger: #FF3B3B;
-  --danger-dim: rgba(255,59,59,0.10);
+  --accent: #C4A55A;
+  --accent-dim: rgba(196,165,90,0.10);
+
+  --safe: #6BAF7B;
+  --safe-dim: rgba(107,175,123,0.10);
+  --warn: #C49556;
+  --warn-dim: rgba(196,149,86,0.10);
+  --danger: #BF6060;
+  --danger-dim: rgba(191,96,96,0.10);
 
   --r: 14px;
   --r-sm: 8px;
@@ -76,7 +79,7 @@ html, body {
 
 .brand-mark {
   font-size: 18px;
-  color: var(--safe);
+  color: var(--accent);
   line-height: 1;
 }
 
@@ -193,10 +196,10 @@ html, body {
   font-size: 11px;
   font-weight: 600;
   padding: 5px 14px;
-  border: 1px solid var(--safe);
+  border: 1px solid var(--accent);
   border-radius: 20px;
-  background: var(--safe-dim);
-  color: var(--safe);
+  background: var(--accent-dim);
+  color: var(--accent);
   cursor: pointer;
   margin-bottom: 14px;
   transition: all 0.12s ease;
@@ -851,18 +854,18 @@ html, body {
 .cal-dot.future    { background: var(--surface-3); }
 
 .cal-dot.selected {
-  outline: 2px solid #E8E8E8;
+  outline: 2px solid var(--text);
   outline-offset: 1px;
   transform: scale(1.15);
 }
 
 .cal-dot.extra {
-  background: #00E5FF;
+  background: var(--accent);
 }
 
 .cal-dot.extra.absent {
   background: var(--danger);
-  border: 2px solid #00E5FF;
+  border: 2px solid var(--accent);
 }
 
 /* ===== DOT INFO CARD ===== */
@@ -922,7 +925,7 @@ html, body {
 .dot-info-status.absent { color: var(--danger); }
 .dot-info-status.cancelled { color: var(--text-3); }
 .dot-info-status.future { color: var(--text-2); }
-.dot-info-status.extra { color: #00E5FF; }
+.dot-info-status.extra { color: var(--accent); }
 
 .dot-info-actions {
   display: flex;
@@ -949,17 +952,17 @@ html, body {
 }
 
 .dot-action.danger {
-  border-color: rgba(255,59,59,0.3);
+  border-color: rgba(191,96,96,0.3);
   color: var(--danger);
 }
 
 .dot-action.safe {
-  border-color: rgba(0,255,136,0.3);
+  border-color: rgba(107,175,123,0.3);
   color: var(--safe);
 }
 
 .dot-action.warn {
-  border-color: rgba(255,184,0,0.3);
+  border-color: rgba(196,149,86,0.3);
   color: var(--warn);
 }
 
@@ -969,6 +972,7 @@ html, body {
   gap: 8px;
   align-items: center;
   margin-top: 12px;
+  padding: 0 4px;
 }
 
 .extra-row .cancel-input {
@@ -978,9 +982,9 @@ html, body {
 .extra-btn {
   padding: 10px 14px;
   background: var(--surface-2);
-  border: 1px solid rgba(0,229,255,0.3);
+  border: 1px solid rgba(196,165,90,0.3);
   border-radius: var(--r-sm);
-  color: #00E5FF;
+  color: var(--accent);
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 600;
@@ -990,7 +994,7 @@ html, body {
 }
 
 .extra-btn:active {
-  background: rgba(0,229,255,0.1);
+  background: var(--accent-dim);
   transform: scale(0.95);
 }
 
@@ -1008,7 +1012,7 @@ html, body {
 }
 
 .cancel-input:focus {
-  border-color: var(--safe);
+  border-color: var(--accent);
 }
 
 /* Chrome date picker fix */
