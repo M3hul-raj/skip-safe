@@ -2,7 +2,7 @@
 
 **Know exactly how many classes you can skip.**
 
-An attendance risk calculator for BIT Mesra students during placement season. Exception-based model — mark only what you skip, not what you attend.
+An attendance risk calculator for BIT Mesra students. Exception-based model — mark only what you skip, not what you attend.
 
 ## Features
 
