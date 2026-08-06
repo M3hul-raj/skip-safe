@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Skip Safe – Know how many classes you can afford to skip">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Skip Safe</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23000000'/%3E%3Ccircle cx='50' cy='50' r='28' fill='none' stroke='%2300ff88' stroke-width='6'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2300ff88'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Top navigation -->
+    <nav id="nav">
+        <div class="nav-left">
+            <span class="brand-mark">◉</span>
+            <span class="brand-name">SKIP SAFE</span>
+        </div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-view="today" id="tab-today">Today</button>
+            <button class="nav-tab" data-view="dashboard" id="tab-dashboard">Dashboard</button>
+        </div>
+    </nav>
+
+    <main id="main">
+        <!-- ===== TODAY VIEW ===== -->
+        <section id="today-view" class="view active">
+            <div class="today-header">
+                <button class="date-btn" id="prev-day" aria-label="Previous day">‹</button>
+                <div class="date-center">
+                    <h1 class="today-day" id="today-day"></h1>
+                    <p class="today-date" id="today-date"></p>
+                </div>
+                <button class="date-btn" id="next-day" aria-label="Next day">›</button>
+            </div>
+
+            <button class="today-pill" id="go-today">↻ Today</button>
+
+            <div class="class-list" id="class-list"></div>
+
+            <div class="empty-state" id="no-classes">
+                <div class="empty-icon">○</div>
+                <p class="empty-title">No classes</p>
+                <p class="empty-sub">Nothing scheduled for this day</p>
+            </div>
+
+            <div class="empty-state" id="holiday-banner">
+                <div class="empty-icon holiday-glow">✦</div>
+                <p class="empty-title">Holiday</p>
+                <p class="empty-sub">No classes today</p>
+            </div>
+
+            <div class="today-footer" id="today-footer">
+                <button class="link-btn" id="holiday-toggle"></button>
+            </div>
+        </section>
+
+        <!-- ===== DASHBOARD VIEW ===== -->
+        <section id="dashboard-view" class="view">
+            <div class="semester-info">
+                <div class="semester-bar">
+                    <div class="semester-fill" id="semester-fill"></div>
+                </div>
+                <p class="semester-label" id="semester-text"></p>
+            </div>
+            <div class="subject-list" id="subject-list"></div>
+            <div class="dash-footer">
+                <button class="link-btn" id="export-btn">↓ Export backup</button>
+                <span class="dot-sep">·</span>
+                <label class="link-btn" for="import-file">↑ Import</label>
+                <input type="file" id="import-file" accept=".json" hidden>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== SUBJECT DETAIL MODAL (bottom sheet) ===== -->
+    <div id="subject-modal" class="modal">
+        <div class="modal-overlay" id="modal-overlay"></div>
+        <div class="modal-sheet">
+            <div class="modal-handle-bar"><div class="modal-handle"></div></div>
+            <div class="modal-head">
+                <div>
+                    <h2 class="modal-title" id="modal-title"></h2>
+                    <p class="modal-sub" id="modal-subtitle"></p>
+                </div>
+                <button class="modal-x" id="modal-close">✕</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <div id="modal-stats"></div>
+                <div class="modal-section">
+                    <h3 class="sec-title">Class History</h3>
+                    <div class="history-grid" id="modal-calendar"></div>
+                </div>
+                <div class="modal-section">
+                    <h3 class="sec-title">Cancel a Class</h3>
+                    <p class="sec-desc">If the teacher cancelled a class, mark it here. It won't count against your attendance.</p>
+                    <div class="cancel-row">
+                        <input type="date" id="cancel-date" class="cancel-input">
+                        <button class="cancel-btn" id="cancel-btn">Mark Cancelled</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
