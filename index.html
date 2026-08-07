@@ -43,7 +43,6 @@
             <button class="today-pill" id="go-today">↻ Today</button>
 
             <div class="class-list" id="class-list"></div>
-            <div class="card-actions" id="card-actions"></div>
 
             <div class="empty-state" id="no-classes">
                 <div class="empty-icon">○</div>
@@ -60,7 +59,6 @@
             <div class="today-extra" id="today-extra">
                 <button class="today-extra-btn" id="today-extra-btn">+ Extra class (other subject)</button>
             </div>
-            <div id="extra-picker" class="extra-picker"></div>
 
             <div class="today-footer" id="today-footer">
                 <button class="link-btn" id="holiday-toggle"></button>
@@ -119,6 +117,12 @@
 
     <!-- Toast notification -->
     <div id="toast" class="toast"></div>
+
+    <!-- Action overlay (Today view mini-modal) -->
+    <div id="action-overlay" class="action-overlay">
+        <div class="action-overlay-bg" id="action-overlay-bg"></div>
+        <div class="action-sheet" id="action-sheet"></div>
+    </div>
 
     <script src="app.js"></script>
 </body>

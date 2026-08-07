@@ -1,4 +1,4 @@
-const CACHE = 'skipsafe-v6';
+const CACHE = 'skipsafe-v7';
 const ASSETS = [
   './',
   './index.html',

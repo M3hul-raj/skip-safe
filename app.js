@@ -72,7 +72,7 @@ let viewDate   = new Date();
 let activeView = 'today';
 let _toastTmr  = null;
 let _selectedDot = null;
-let _expandedCard = null;
+let _lastBackTime = 0;
 
 
 // ===== PERSISTENCE =====
@@ -97,6 +97,33 @@ function save() {
     h: [...state.customHolidays],
     e: [...state.extras],
   }));
+}
+
+// Migrate old EXTRA keys to EXTRA-1 format
+function migrateExtras() {
+  const old = [...state.extras].filter(k => k.endsWith('|EXTRA'));
+  if (old.length === 0) return;
+  old.forEach(k => {
+    const newK = k + '-1';
+    state.extras.delete(k);
+    state.extras.add(newK);
+    if (state.absences.has(k)) { state.absences.delete(k); state.absences.add(newK); }
+    if (state.cancellations.has(k)) { state.cancellations.delete(k); state.cancellations.add(newK); }
+  });
+  save();
+}
+
+// Find all extra class keys for a subject on a date
+function findExtras(ds, subj) {
+  const prefix = `${ds}|${subj}|EXTRA-`;
+  return [...state.extras].filter(k => k.startsWith(prefix));
+}
+
+// Get the next available extra key
+function nextExtraKey(ds, subj) {
+  let n = 1;
+  while (state.extras.has(K(ds, subj, `EXTRA-${n}`))) n++;
+  return K(ds, subj, `EXTRA-${n}`);
 }
 
 
@@ -140,11 +167,13 @@ function getScheduled(subj, from, to) {
         }
       }
     }
-    // Also include extra classes on this date (extras work on any day, even weekends/holidays)
-    const ek = K(fmt(d), subj, 'EXTRA');
-    if (state.extras.has(ek) && !state.cancellations.has(ek) && fmt(d) >= from && fmt(d) <= to) {
-      out.push({ ds: fmt(d), period: 'EXTRA', k: ek, isExtra: true });
-    }
+    // Also include extra classes on this date
+    const extras = findExtras(fmt(d), subj);
+    extras.forEach(ek => {
+      if (!state.cancellations.has(ek) && fmt(d) >= from && fmt(d) <= to) {
+        out.push({ ds: fmt(d), period: ek.split('|')[2], k: ek, isExtra: true });
+      }
+    });
     d = addDays(d, 1);
   }
   return out;
@@ -206,12 +235,23 @@ function renderToday() {
   const holBtn    = document.getElementById('holiday-toggle');
 
   // Holiday button label
-  holBtn.textContent = isHoliday(ds) ? '✕ Remove day off' : '+ Mark day off';
+  holBtn.textContent = isHoliday(ds) ? '\u2715 Remove day off' : '+ Mark day off';
 
   // Determine view state
   const isHol      = !isWeekend(viewDate) && inSemester(ds) && isHoliday(ds);
   const slots      = TIMETABLE[dow] || [];
-  const hasClasses = slots.length > 0 && !isWeekend(viewDate) && inSemester(ds) && !isHol;
+
+  // Collect extra classes for this date (all subjects)
+  const todayExtras = [];
+  Object.keys(SUBJECTS).forEach(code => {
+    findExtras(ds, code).forEach(ek => {
+      todayExtras.push({ subject: code, k: ek });
+    });
+  });
+
+  const hasRegular = slots.length > 0 && !isWeekend(viewDate) && inSemester(ds) && !isHol;
+  const hasExtras  = todayExtras.length > 0;
+  const hasClasses = hasRegular || hasExtras;
   const showEmpty  = !hasClasses && !isHol;
   const showFooter = !isWeekend(viewDate) && inSemester(ds);
 
@@ -220,78 +260,119 @@ function renderToday() {
   holEl.style.display    = isHol       ? 'flex' : 'none';
   footerEl.style.display = showFooter  ? 'flex' : 'none';
 
-  if (!hasClasses) return;
+  // Show/hide extra class button
+  const extraEl = document.getElementById('today-extra');
+  if (extraEl) extraEl.style.display = (hasClasses || isHol) && inSemester(ds) ? 'flex' : 'none';
+
+  if (!hasClasses) { listEl.innerHTML = ''; return; }
 
   // Current time (for live indicator)
   const now     = new Date();
   const nowMins = now.getHours() * 60 + now.getMinutes();
 
-  listEl.innerHTML = slots.map(sl => {
-    const subj      = SUBJECTS[sl.subject];
-    const k         = K(ds, sl.subject, sl.period);
-    const skipped   = state.absences.has(k);
-    const cancelled = state.cancellations.has(k);
-    const st        = calcStats(sl.subject);
+  // Render regular timetable cards
+  let html = '';
+  if (hasRegular) {
+    html += slots.map(sl => {
+      const subj      = SUBJECTS[sl.subject];
+      const k         = K(ds, sl.subject, sl.period);
+      const skipped   = state.absences.has(k);
+      const cancelled = state.cancellations.has(k);
+      const st        = calcStats(sl.subject);
 
-    // Is this class happening right now?
-    const [sh, sm] = sl.start.split(':').map(Number);
-    const [eh, em] = sl.end.split(':').map(Number);
-    const isCurrent = isNow && nowMins >= sh*60+sm && nowMins <= eh*60+em;
+      // Is this class happening right now?
+      const [sh, sm] = sl.start.split(':').map(Number);
+      const [eh, em] = sl.end.split(':').map(Number);
+      const isCurrent = isNow && nowMins >= sh*60+sm && nowMins <= eh*60+em;
 
-    // Cancelled card
-    if (cancelled) {
-      return `<div class="class-card cancelled">
+      // Cancelled card (now tappable)
+      if (cancelled) {
+        return `<div class="class-card cancelled" data-k="${k}" data-subj="${sl.subject}" style="cursor:pointer">
+          <div class="class-time"><span>${sl.start}</span><span class="time-sep">\u2013</span><span>${sl.end}</span></div>
+          <div class="class-body">
+            <div class="class-top"><span class="class-name">${subj.name}</span></div>
+            <div class="class-bottom"><span class="class-meta">${subj.code}</span></div>
+          </div>
+          <span class="cancelled-label">CANCELLED</span>
+        </div>`;
+      }
+
+      const skipsText = st.skips === 0 ? 'No skips left!'
+        : st.skips === 1 ? '1 skip left' : `${st.skips} skips left`;
+
+      const cls = ['class-card', st.risk];
+      if (skipped)  cls.push('skipped');
+      if (isCurrent) cls.push('current');
+
+      return `<div class="${cls.join(' ')}" data-k="${k}" data-subj="${sl.subject}" style="cursor:pointer">
         <div class="class-time"><span>${sl.start}</span><span class="time-sep">\u2013</span><span>${sl.end}</span></div>
         <div class="class-body">
-          <div class="class-top"><span class="class-name">${subj.name}</span></div>
-          <div class="class-bottom"><span class="class-meta">${subj.code}</span></div>
+          <div class="class-top">
+            <span class="class-name">${subj.name}</span>
+            <span class="class-pct ${st.risk}">${st.pct.toFixed(0)}%</span>
+          </div>
+          <div class="class-bottom">
+            <span class="class-meta">${subj.code} \u00B7 ${sl.isLab ? 'Lab' : 'Room ' + sl.room}</span>
+            <span class="class-skips">${skipsText}</span>
+          </div>
         </div>
-        <span class="cancelled-label">CANCELLED</span>
+        <button class="skip-btn${skipped ? ' skipped' : ''}" onclick="toggleSkip('${k}')">${skipped ? 'UNDO' : 'SKIP'}</button>
       </div>`;
-    }
+    }).join('');
+  }
 
-    const skipsText = st.skips === 0 ? 'No skips left!'
-      : st.skips === 1 ? '1 skip left' : `${st.skips} skips left`;
+  // Render extra class cards
+  if (hasExtras) {
+    html += todayExtras.map(ex => {
+      const subj = SUBJECTS[ex.subject];
+      const k = ex.k;
+      const skipped = state.absences.has(k);
+      const cancelled = state.cancellations.has(k);
+      const st = calcStats(ex.subject);
 
-    const cls = ['class-card', st.risk];
-    if (skipped)  cls.push('skipped');
-    if (isCurrent) cls.push('current');
+      if (cancelled) {
+        return `<div class="class-card cancelled extra-card" data-k="${k}" data-subj="${ex.subject}" style="cursor:pointer">
+          <div class="class-time"><span>\u2014</span></div>
+          <div class="class-body">
+            <div class="class-top"><span class="class-name">${subj.name}<span class="extra-badge">EXTRA</span></span></div>
+            <div class="class-bottom"><span class="class-meta">${subj.code}</span></div>
+          </div>
+          <span class="cancelled-label">CANCELLED</span>
+        </div>`;
+      }
 
-    return `<div class="${cls.join(' ')}" data-k="${k}" data-subj="${sl.subject}">
-      <div class="class-time"><span>${sl.start}</span><span class="time-sep">\u2013</span><span>${sl.end}</span></div>
-      <div class="class-body">
-        <div class="class-top">
-          <span class="class-name">${subj.name}</span>
-          <span class="class-pct ${st.risk}">${st.pct.toFixed(0)}%</span>
+      const cls = ['class-card', st.risk, 'extra-card'];
+      if (skipped) cls.push('skipped');
+
+      return `<div class="${cls.join(' ')}" data-k="${k}" data-subj="${ex.subject}" style="cursor:pointer">
+        <div class="class-time"><span>\u2014</span></div>
+        <div class="class-body">
+          <div class="class-top">
+            <span class="class-name">${subj.name}<span class="extra-badge">EXTRA</span></span>
+            <span class="class-pct ${st.risk}">${st.pct.toFixed(0)}%</span>
+          </div>
+          <div class="class-bottom">
+            <span class="class-meta">${subj.code} \u00B7 Extra Class</span>
+            <span class="class-skips">${st.skips} skips left</span>
+          </div>
         </div>
-        <div class="class-bottom">
-          <span class="class-meta">${subj.code} \u00B7 ${sl.isLab ? 'Lab' : 'Room ' + sl.room}</span>
-          <span class="class-skips">${skipsText}</span>
-        </div>
-      </div>
-      <button class="skip-btn${skipped ? ' skipped' : ''}" onclick="toggleSkip('${k}')">${skipped ? 'UNDO' : 'SKIP'}</button>
-    </div>`;
-  }).join('');
+        <button class="skip-btn${skipped ? ' skipped' : ''}" onclick="toggleSkip('${k}')">${skipped ? 'UNDO' : 'SKIP'}</button>
+      </div>`;
+    }).join('');
+  }
 
-  // Hide card-actions when re-rendering
-  closeCardActions();
+  listEl.innerHTML = html;
 
-  // Make cards clickable (except skip button area)
-  listEl.querySelectorAll('.class-card:not(.cancelled)').forEach(card => {
-    card.style.cursor = 'pointer';
+  // Make ALL cards clickable (including cancelled) — opens action overlay
+  listEl.querySelectorAll('.class-card').forEach(card => {
     card.addEventListener('click', e => {
-      // Don't trigger if they clicked the SKIP/UNDO button
       if (e.target.closest('.skip-btn')) return;
       const k = card.dataset.k;
       const subj = card.dataset.subj;
       if (!k || !subj) return;
-      showCardActions(subj, k, ds);
+      showActionOverlay('card', { subj, k, ds });
     });
   });
-
-  // Show/hide extra class button
-  const extraEl = document.getElementById('today-extra');
-  if (extraEl) extraEl.style.display = hasClasses || isHol ? 'flex' : 'none';
 }
 
 
@@ -410,16 +491,16 @@ function renderCalendar(code) {
       }
     }
     // Extra classes (can be on any day)
-    const ek = K(ds, code, 'EXTRA');
-    if (state.extras.has(ek)) {
+    const extKeys = findExtras(ds, code);
+    extKeys.forEach(ek => {
       slots.push({
-        ds, period: 'EXTRA', k: ek,
+        ds, period: ek.split('|')[2], k: ek,
         cancelled: state.cancellations.has(ek),
         absent: state.absences.has(ek),
         future: ds > today,
         isExtra: true,
       });
-    }
+    });
     d = addDays(d, 1);
   }
 
@@ -583,8 +664,7 @@ function addExtraClass() {
 
   if (!ds) { toast('Select a date'); return; }
 
-  const ek = K(ds, code, 'EXTRA');
-  if (state.extras.has(ek)) { toast('Extra already added for this date'); return; }
+  const ek = nextExtraKey(ds, code);
 
   state.extras.add(ek);
   save();
@@ -625,72 +705,88 @@ function switchView(v) {
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
   document.getElementById(`${v}-view`).classList.add('active');
   document.querySelector(`.nav-tab[data-view="${v}"]`).classList.add('active');
-  if (v === 'dashboard') renderDash();
-  else renderToday();
+  if (v === 'dashboard') {
+    history.pushState(null, '', location.href);
+    renderDash();
+  } else {
+    renderToday();
+  }
 }
 
-// ===== TODAY VIEW — CARD ACTIONS =====
+// ===== ACTION OVERLAY (replaces inline card actions + extra picker) =====
 
-function showCardActions(subj, k, ds) {
-  // If same card tapped, toggle off
-  if (_expandedCard === k) { closeCardActions(); return; }
-  _expandedCard = k;
+function showActionOverlay(mode, data) {
+  closeActionOverlay(); // close any existing
+  const overlay = document.getElementById('action-overlay');
+  const sheet = document.getElementById('action-sheet');
 
-  const s = SUBJECTS[subj];
-  const d = parse(ds);
-  const today = fmt(new Date());
-  const dayName = DAY_NAMES[d.getDay()];
-  const dateStr = `${dayName}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`;
-  const isCancelled = state.cancellations.has(k);
-  const isAbsent = state.absences.has(k);
-  const isFuture = ds > today;
-  const isPast = ds <= today;
+  if (mode === 'card') {
+    const { subj, k, ds } = data;
+    const s = SUBJECTS[subj];
+    const d = parse(ds);
+    const today = fmt(new Date());
+    const dateStr = `${DAY_NAMES[d.getDay()]}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`;
+    const isCancelled = state.cancellations.has(k);
+    const isAbsent = state.absences.has(k);
+    const isFuture = ds > today;
+    const isExtraKey = k.includes('|EXTRA-');
 
-  let actions = '';
+    let btns = '';
+    if (isCancelled) {
+      btns = `<button class="action-sheet-btn safe" onclick="overlayAction('undoCancel','${k}')">Undo Cancel</button>`;
+      if (isExtraKey) btns += ` <button class="action-sheet-btn danger" onclick="overlayAction('removeExtra','${k}')">Remove Extra</button>`;
+    } else if (isAbsent) {
+      btns = `<button class="action-sheet-btn safe" onclick="overlayAction('undoSkip','${k}')">Undo Skip</button>
+              <button class="action-sheet-btn warn" onclick="overlayAction('cancel','${k}')">Cancel Class</button>`;
+    } else if (isFuture) {
+      btns = `<button class="action-sheet-btn warn" onclick="overlayAction('cancel','${k}')">Pre-cancel</button>`;
+      if (isExtraKey) btns += ` <button class="action-sheet-btn danger" onclick="overlayAction('removeExtra','${k}')">Remove Extra</button>`;
+    } else {
+      btns = `<button class="action-sheet-btn danger" onclick="overlayAction('absent','${k}')">Mark Absent</button>
+              <button class="action-sheet-btn warn" onclick="overlayAction('cancel','${k}')">Cancel Class</button>`;
+      if (isExtraKey) btns += ` <button class="action-sheet-btn danger" onclick="overlayAction('removeExtra','${k}')">Remove Extra</button>`;
+    }
+    btns += ` <button class="action-sheet-btn accent" onclick="overlayAction('addExtra','${subj}','${ds}')">+ Extra Class</button>`;
 
-  if (isCancelled) {
-    actions = `<button class="dot-action safe" onclick="cardAction('undoCancel','${k}','${ds}')">Undo Cancel</button>`;
-  } else if (isAbsent) {
-    actions = `<button class="dot-action safe" onclick="cardAction('undoSkip','${k}','${ds}')">Undo Skip</button>
-               <button class="dot-action warn" onclick="cardAction('cancel','${k}','${ds}')">Cancel Class</button>`;
-  } else if (isFuture) {
-    actions = `<button class="dot-action warn" onclick="cardAction('cancel','${k}','${ds}')">Pre-cancel</button>`;
-  } else {
-    actions = `<button class="dot-action danger" onclick="cardAction('absent','${k}','${ds}')">Mark Absent</button>
-               <button class="dot-action warn" onclick="cardAction('cancel','${k}','${ds}')">Cancel Class</button>`;
+    sheet.innerHTML = `
+      <div class="action-sheet-title">${s.name}</div>
+      <div class="action-sheet-sub">${dateStr}</div>
+      <div class="action-sheet-btns">${btns}</div>`;
+
+  } else if (mode === 'picker') {
+    const ds = data.ds;
+    const d = viewDate;
+    sheet.innerHTML = `
+      <div class="action-sheet-title">Add extra class</div>
+      <div class="action-sheet-sub">${DAY_NAMES[d.getDay()]}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}</div>
+      <div class="pick-grid">
+        ${Object.entries(SUBJECTS).map(([code, s]) => {
+          return `<button class="pick-btn" 
+            style="border-color:${s.color}40;color:${s.color}" 
+            onclick="pickExtra('${code}','${ds}')">
+            ${s.short}
+          </button>`;
+        }).join('')}
+      </div>`;
   }
 
-  // Add extra class for THIS subject
-  actions += ` <button class="dot-action" onclick="cardAction('extra','${subj}','${ds}')">+ Extra Class</button>`;
-
-  const el = document.getElementById('card-actions');
-  el.innerHTML = `
-    <div class="card-action-panel">
-      <div class="dot-info-header">
-        <div>
-          <div class="dot-info-date">${s.name}</div>
-          <div class="dot-info-period">${dateStr}</div>
-        </div>
-        <button class="dot-info-close" onclick="closeCardActions()">✕</button>
-      </div>
-      <div class="dot-info-actions">${actions}</div>
-    </div>`;
-  el.style.display = 'block';
-
-  // Highlight the active card
-  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('card-expanded'));
-  const activeCard = document.querySelector(`.class-card[data-k="${k}"]`);
-  if (activeCard) activeCard.classList.add('card-expanded');
+  overlay.classList.add('active');
+  history.pushState(null, '', location.href);
 }
 
-function closeCardActions() {
-  _expandedCard = null;
-  const el = document.getElementById('card-actions');
-  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
-  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('card-expanded'));
+function closeActionOverlay() {
+  const overlay = document.getElementById('action-overlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+    document.getElementById('action-sheet').innerHTML = '';
+  }
 }
 
-function cardAction(action, key, ds) {
+function isOverlayOpen() {
+  return document.getElementById('action-overlay').classList.contains('active');
+}
+
+function overlayAction(action, key, ds) {
   switch (action) {
     case 'cancel':
       state.cancellations.add(key);
@@ -709,62 +805,31 @@ function cardAction(action, key, ds) {
       state.absences.add(key);
       toast('Marked as absent');
       break;
-    case 'extra':
-      // key is actually the subject code here
-      const ek = K(ds, key, 'EXTRA');
-      if (state.extras.has(ek)) { toast('Extra already exists for this date'); return; }
+    case 'removeExtra':
+      state.extras.delete(key);
+      state.absences.delete(key);
+      state.cancellations.delete(key);
+      toast('Extra class removed');
+      break;
+    case 'addExtra':
+      // key = subject code, ds comes as 3rd arg
+      const ek = nextExtraKey(ds, key);
       state.extras.add(ek);
       const d = parse(ds);
-      toast(`Extra class added — ${DAY_NAMES[d.getDay()]}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`);
+      toast(`Extra class added \u2014 ${DAY_NAMES[d.getDay()]}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`);
       break;
   }
   save();
+  closeActionOverlay();
   renderToday();
 }
 
-// ===== TODAY VIEW — EXTRA CLASS PICKER =====
-
-function showExtraPicker() {
-  const ds = fmt(viewDate);
-  const picker = document.getElementById('extra-picker');
-
-  // Show all subjects as selectable buttons
-  picker.innerHTML = `
-    <div class="extra-picker-panel">
-      <div class="dot-info-header">
-        <div class="dot-info-date">Add extra class</div>
-        <button class="dot-info-close" onclick="closeExtraPicker()">✕</button>
-      </div>
-      <p class="sec-desc">Select subject for ${DAY_NAMES[viewDate.getDay()]}, ${viewDate.getDate()} ${MONTH_SHORT[viewDate.getMonth()]}:</p>
-      <div class="extra-picker-grid">
-        ${Object.entries(SUBJECTS).map(([code, s]) => {
-          const ek = K(ds, code, 'EXTRA');
-          const already = state.extras.has(ek);
-          return `<button class="extra-pick-btn${already ? ' disabled' : ''}" 
-            style="border-color:${s.color}40;color:${s.color}" 
-            ${already ? 'disabled' : `onclick="pickExtraSubject('${code}')"`}>
-            ${s.short}${already ? ' ✓' : ''}
-          </button>`;
-        }).join('')}
-      </div>
-    </div>`;
-  picker.style.display = 'block';
-}
-
-function closeExtraPicker() {
-  const picker = document.getElementById('extra-picker');
-  if (picker) { picker.style.display = 'none'; picker.innerHTML = ''; }
-}
-
-function pickExtraSubject(code) {
-  const ds = fmt(viewDate);
-  const ek = K(ds, code, 'EXTRA');
-  if (state.extras.has(ek)) { toast('Already added'); return; }
+function pickExtra(code, ds) {
+  const ek = nextExtraKey(ds, code);
   state.extras.add(ek);
   save();
-  const d = viewDate;
-  toast(`${SUBJECTS[code].short} extra class added — ${DAY_NAMES[d.getDay()]}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`);
-  closeExtraPicker();
+  toast(`${SUBJECTS[code].short} extra class added`);
+  closeActionOverlay();
   renderToday();
 }
 
@@ -844,6 +909,7 @@ function toast(msg) {
 
 function init() {
   load();
+  migrateExtras();
   viewDate = new Date();
 
   // Tab navigation
@@ -862,8 +928,13 @@ function init() {
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('modal-overlay').addEventListener('click', closeModal);
 
-  // Extra class (today view)
-  document.getElementById('today-extra-btn').addEventListener('click', showExtraPicker);
+  // Action overlay (blur bg click)
+  document.getElementById('action-overlay-bg').addEventListener('click', closeActionOverlay);
+
+  // Extra class (today view) — opens action overlay picker
+  document.getElementById('today-extra-btn').addEventListener('click', () => {
+    showActionOverlay('picker', { ds: fmt(viewDate) });
+  });
 
   // Extra class (modal)
   document.getElementById('extra-btn').addEventListener('click', addExtraClass);
@@ -889,6 +960,40 @@ function init() {
       navDay(dx > 0 ? 1 : -1);
     }
   }, { passive: true });
+
+  // Android back gesture handling
+  history.replaceState(null, '', location.href);
+  history.pushState(null, '', location.href);
+
+  window.addEventListener('popstate', () => {
+    // Re-push so we can catch the next back
+    history.pushState(null, '', location.href);
+
+    // Close things in priority order
+    const modal = document.getElementById('subject-modal');
+    if (modal && modal.classList.contains('active')) {
+      closeModal();
+      return;
+    }
+    if (isOverlayOpen()) {
+      closeActionOverlay();
+      return;
+    }
+    if (activeView === 'dashboard') {
+      switchView('today');
+      return;
+    }
+
+    // Nothing to close — double-back to exit
+    const now = Date.now();
+    if (now - _lastBackTime < 2000) {
+      // Actually exit
+      history.go(-(history.length));
+      return;
+    }
+    _lastBackTime = now;
+    toast('Press back again to exit');
+  });
 
   // Initial render
   renderToday();
