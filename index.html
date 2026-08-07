@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Skip Safe</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23000000'/%3E%3Ccircle cx='50' cy='50' r='28' fill='none' stroke='%23C4A55A' stroke-width='6'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23C4A55A'/%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23000000'/%3E%3Ccircle cx='50' cy='50' r='28' fill='none' stroke='%2360A5FA' stroke-width='6'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2360A5FA'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -43,6 +43,7 @@
             <button class="today-pill" id="go-today">↻ Today</button>
 
             <div class="class-list" id="class-list"></div>
+            <div class="card-actions" id="card-actions"></div>
 
             <div class="empty-state" id="no-classes">
                 <div class="empty-icon">○</div>
@@ -55,6 +56,11 @@
                 <p class="empty-title">Holiday</p>
                 <p class="empty-sub">No classes today</p>
             </div>
+
+            <div class="today-extra" id="today-extra">
+                <button class="today-extra-btn" id="today-extra-btn">+ Extra class (other subject)</button>
+            </div>
+            <div id="extra-picker" class="extra-picker"></div>
 
             <div class="today-footer" id="today-footer">
                 <button class="link-btn" id="holiday-toggle"></button>
@@ -96,7 +102,6 @@
                 <div class="modal-section">
                     <h3 class="sec-title">Class History</h3>
                     <div class="history-grid" id="modal-calendar"></div>
-                </div>
                     <div class="dot-info" id="dot-info"></div>
                     <p class="sec-desc" style="margin-top:12px;text-align:center;opacity:0.5">Tap any class above to see details or cancel</p>
                 </div>

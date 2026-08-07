@@ -16,13 +16,13 @@ const PRESET_HOLIDAYS = new Set([
 ]);
 
 const SUBJECTS = {
-  MT204: { name: 'Constitution of India', code: 'MT204', short: 'COI', credits: 0, teacher: '\u2014', color: '#A89ACA' },
-  MA501: { name: 'Functional Analysis', code: 'MA501', short: 'FA', credits: 4, teacher: 'Dr. S. Padhi', color: '#7AAFBE' },
-  MA502: { name: 'Number Theory', code: 'MA502', short: 'NT', credits: 4, teacher: 'Dr. N. Das', color: '#8FB87A' },
-  CA601: { name: 'Computer Graphics', code: 'CA601', short: 'CG', credits: 3, teacher: 'Dr. K. K. Senapati', color: '#C4A55A' },
-  CA630: { name: 'Crypto & Network Security', code: 'CA630', short: 'CNS', credits: 3, teacher: 'Dr. A. Bera', color: '#C4805A' },
-  CA635: { name: 'Natural Language Processing', code: 'CA635', short: 'NLP', credits: 3, teacher: 'Dr. Shruti Garg', color: '#BE7A8E' },
-  CA602: { name: 'CG Lab', code: 'CA602', short: 'CG Lab', credits: 1.5, teacher: 'Dr. K. K. Senapati', color: '#B09460', isLab: true },
+  MT204: { name: 'Constitution of India', code: 'MT204', short: 'COI', credits: 0, teacher: '\u2014', color: '#A78BFA' },
+  MA501: { name: 'Functional Analysis', code: 'MA501', short: 'FA', credits: 4, teacher: 'Dr. S. Padhi', color: '#67E8F9' },
+  MA502: { name: 'Number Theory', code: 'MA502', short: 'NT', credits: 4, teacher: 'Dr. N. Das', color: '#86EFAC' },
+  CA601: { name: 'Computer Graphics', code: 'CA601', short: 'CG', credits: 3, teacher: 'Dr. K. K. Senapati', color: '#60A5FA' },
+  CA630: { name: 'Crypto & Network Security', code: 'CA630', short: 'CNS', credits: 3, teacher: 'Dr. A. Bera', color: '#FB923C' },
+  CA635: { name: 'Natural Language Processing', code: 'CA635', short: 'NLP', credits: 3, teacher: 'Dr. Shruti Garg', color: '#F472B6' },
+  CA602: { name: 'CG Lab', code: 'CA602', short: 'CG Lab', credits: 1.5, teacher: 'Dr. K. K. Senapati', color: '#818CF8', isLab: true },
 };
 
 // Day of week: 0=Sun, 1=Mon, ..., 6=Sat
@@ -72,6 +72,7 @@ let viewDate   = new Date();
 let activeView = 'today';
 let _toastTmr  = null;
 let _selectedDot = null;
+let _expandedCard = null;
 
 
 // ===== PERSISTENCE =====
@@ -167,9 +168,16 @@ function calcStats(subj) {
   const mustAttend = Math.max(0, Math.ceil(THRESHOLD * (H + R) - A));
   const skips      = Math.max(0, R - mustAttend);
 
-  let risk = 'safe';
-  if (skips <= 1) risk = 'danger';
-  else if (skips <= 4) risk = 'warning';
+  let risk;
+  if (R === 0) {
+    risk = pct >= THRESHOLD * 100 ? 'safe' : 'danger';
+  } else if (skips <= 1) {
+    risk = 'danger';
+  } else if (skips <= 4) {
+    risk = 'warning';
+  } else {
+    risk = 'safe';
+  }
 
   return { H, A, missed, R, pct, mustAttend, skips, risk };
 }
@@ -249,7 +257,7 @@ function renderToday() {
     if (skipped)  cls.push('skipped');
     if (isCurrent) cls.push('current');
 
-    return `<div class="${cls.join(' ')}">
+    return `<div class="${cls.join(' ')}" data-k="${k}" data-subj="${sl.subject}">
       <div class="class-time"><span>${sl.start}</span><span class="time-sep">\u2013</span><span>${sl.end}</span></div>
       <div class="class-body">
         <div class="class-top">
@@ -264,6 +272,26 @@ function renderToday() {
       <button class="skip-btn${skipped ? ' skipped' : ''}" onclick="toggleSkip('${k}')">${skipped ? 'UNDO' : 'SKIP'}</button>
     </div>`;
   }).join('');
+
+  // Hide card-actions when re-rendering
+  closeCardActions();
+
+  // Make cards clickable (except skip button area)
+  listEl.querySelectorAll('.class-card:not(.cancelled)').forEach(card => {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', e => {
+      // Don't trigger if they clicked the SKIP/UNDO button
+      if (e.target.closest('.skip-btn')) return;
+      const k = card.dataset.k;
+      const subj = card.dataset.subj;
+      if (!k || !subj) return;
+      showCardActions(subj, k, ds);
+    });
+  });
+
+  // Show/hide extra class button
+  const extraEl = document.getElementById('today-extra');
+  if (extraEl) extraEl.style.display = hasClasses || isHol ? 'flex' : 'none';
 }
 
 
@@ -601,6 +629,145 @@ function switchView(v) {
   else renderToday();
 }
 
+// ===== TODAY VIEW — CARD ACTIONS =====
+
+function showCardActions(subj, k, ds) {
+  // If same card tapped, toggle off
+  if (_expandedCard === k) { closeCardActions(); return; }
+  _expandedCard = k;
+
+  const s = SUBJECTS[subj];
+  const d = parse(ds);
+  const today = fmt(new Date());
+  const dayName = DAY_NAMES[d.getDay()];
+  const dateStr = `${dayName}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`;
+  const isCancelled = state.cancellations.has(k);
+  const isAbsent = state.absences.has(k);
+  const isFuture = ds > today;
+  const isPast = ds <= today;
+
+  let actions = '';
+
+  if (isCancelled) {
+    actions = `<button class="dot-action safe" onclick="cardAction('undoCancel','${k}','${ds}')">Undo Cancel</button>`;
+  } else if (isAbsent) {
+    actions = `<button class="dot-action safe" onclick="cardAction('undoSkip','${k}','${ds}')">Undo Skip</button>
+               <button class="dot-action warn" onclick="cardAction('cancel','${k}','${ds}')">Cancel Class</button>`;
+  } else if (isFuture) {
+    actions = `<button class="dot-action warn" onclick="cardAction('cancel','${k}','${ds}')">Pre-cancel</button>`;
+  } else {
+    actions = `<button class="dot-action danger" onclick="cardAction('absent','${k}','${ds}')">Mark Absent</button>
+               <button class="dot-action warn" onclick="cardAction('cancel','${k}','${ds}')">Cancel Class</button>`;
+  }
+
+  // Add extra class for THIS subject
+  actions += ` <button class="dot-action" onclick="cardAction('extra','${subj}','${ds}')">+ Extra Class</button>`;
+
+  const el = document.getElementById('card-actions');
+  el.innerHTML = `
+    <div class="card-action-panel">
+      <div class="dot-info-header">
+        <div>
+          <div class="dot-info-date">${s.name}</div>
+          <div class="dot-info-period">${dateStr}</div>
+        </div>
+        <button class="dot-info-close" onclick="closeCardActions()">✕</button>
+      </div>
+      <div class="dot-info-actions">${actions}</div>
+    </div>`;
+  el.style.display = 'block';
+
+  // Highlight the active card
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('card-expanded'));
+  const activeCard = document.querySelector(`.class-card[data-k="${k}"]`);
+  if (activeCard) activeCard.classList.add('card-expanded');
+}
+
+function closeCardActions() {
+  _expandedCard = null;
+  const el = document.getElementById('card-actions');
+  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('card-expanded'));
+}
+
+function cardAction(action, key, ds) {
+  switch (action) {
+    case 'cancel':
+      state.cancellations.add(key);
+      state.absences.delete(key);
+      toast('Class cancelled');
+      break;
+    case 'undoCancel':
+      state.cancellations.delete(key);
+      toast('Cancel undone');
+      break;
+    case 'undoSkip':
+      state.absences.delete(key);
+      toast('Skip undone');
+      break;
+    case 'absent':
+      state.absences.add(key);
+      toast('Marked as absent');
+      break;
+    case 'extra':
+      // key is actually the subject code here
+      const ek = K(ds, key, 'EXTRA');
+      if (state.extras.has(ek)) { toast('Extra already exists for this date'); return; }
+      state.extras.add(ek);
+      const d = parse(ds);
+      toast(`Extra class added — ${DAY_NAMES[d.getDay()]}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`);
+      break;
+  }
+  save();
+  renderToday();
+}
+
+// ===== TODAY VIEW — EXTRA CLASS PICKER =====
+
+function showExtraPicker() {
+  const ds = fmt(viewDate);
+  const picker = document.getElementById('extra-picker');
+
+  // Show all subjects as selectable buttons
+  picker.innerHTML = `
+    <div class="extra-picker-panel">
+      <div class="dot-info-header">
+        <div class="dot-info-date">Add extra class</div>
+        <button class="dot-info-close" onclick="closeExtraPicker()">✕</button>
+      </div>
+      <p class="sec-desc">Select subject for ${DAY_NAMES[viewDate.getDay()]}, ${viewDate.getDate()} ${MONTH_SHORT[viewDate.getMonth()]}:</p>
+      <div class="extra-picker-grid">
+        ${Object.entries(SUBJECTS).map(([code, s]) => {
+          const ek = K(ds, code, 'EXTRA');
+          const already = state.extras.has(ek);
+          return `<button class="extra-pick-btn${already ? ' disabled' : ''}" 
+            style="border-color:${s.color}40;color:${s.color}" 
+            ${already ? 'disabled' : `onclick="pickExtraSubject('${code}')"`}>
+            ${s.short}${already ? ' ✓' : ''}
+          </button>`;
+        }).join('')}
+      </div>
+    </div>`;
+  picker.style.display = 'block';
+}
+
+function closeExtraPicker() {
+  const picker = document.getElementById('extra-picker');
+  if (picker) { picker.style.display = 'none'; picker.innerHTML = ''; }
+}
+
+function pickExtraSubject(code) {
+  const ds = fmt(viewDate);
+  const ek = K(ds, code, 'EXTRA');
+  if (state.extras.has(ek)) { toast('Already added'); return; }
+  state.extras.add(ek);
+  save();
+  const d = viewDate;
+  toast(`${SUBJECTS[code].short} extra class added — ${DAY_NAMES[d.getDay()]}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`);
+  closeExtraPicker();
+  renderToday();
+}
+
 function toggleHoliday() {
   const ds = fmt(viewDate);
   if (PRESET_HOLIDAYS.has(ds)) { toast('Official holiday \u2014 can\u2019t remove'); return; }
@@ -695,7 +862,10 @@ function init() {
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('modal-overlay').addEventListener('click', closeModal);
 
-  // Extra class
+  // Extra class (today view)
+  document.getElementById('today-extra-btn').addEventListener('click', showExtraPicker);
+
+  // Extra class (modal)
   document.getElementById('extra-btn').addEventListener('click', addExtraClass);
 
   // Export / Import
