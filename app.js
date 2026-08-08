@@ -5,8 +5,8 @@
 
 // ===== CONSTANTS =====
 
-function hapticTap() {
-  if (navigator.vibrate) navigator.vibrate(10);
+function hapticTap(pattern = 10) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
 }
 
 const SEMESTER_START = '2026-07-27';
@@ -688,6 +688,7 @@ function undoDotSkip(k) {
 }
 
 function markDotAbsent(k) {
+  hapticTap([20, 10, 20]);
   state.absences.add(k);
   save();
   toast('Marked as absent');
@@ -696,6 +697,7 @@ function markDotAbsent(k) {
 }
 
 function removeDotExtra(k) {
+  hapticTap([20, 10, 20]);
   state.extras.delete(k);
   state.absences.delete(k);
   state.cancellations.delete(k);
@@ -728,9 +730,11 @@ function addExtraClass() {
 
 function toggleSkip(k) {
   if (state.absences.has(k)) {
+    hapticTap();
     state.absences.delete(k);
     toast('Skip undone');
   } else {
+    hapticTap([20, 10, 20]);
     state.absences.add(k);
     toast('Marked as skipped');
   }
@@ -841,6 +845,11 @@ function isOverlayOpen() {
 }
 
 function overlayAction(action, key, ds) {
+  if (['cancel', 'absent', 'removeExtra'].includes(action)) {
+    hapticTap([20, 10, 20]);
+  } else {
+    hapticTap();
+  }
   switch (action) {
     case 'cancel':
       state.cancellations.add(key);
@@ -888,6 +897,7 @@ function pickExtra(code, ds) {
 }
 
 function toggleHoliday() {
+  hapticTap();
   const ds = fmt(viewDate);
   if (PRESET_HOLIDAYS.has(ds)) { toast('Official holiday \u2014 can\u2019t remove'); return; }
   if (state.customHolidays.has(ds)) {
@@ -1118,7 +1128,7 @@ function renderDatePicker() {
   const m = pickerDate.getMonth();
   document.getElementById('dp-month-year').textContent = `${MONTH_NAMES[m]} ${y}`;
 
-  const firstDay = new Date(y, m, 1).getDay();
+  const firstDay = (new Date(y, m, 1).getDay() + 6) % 7;
   const daysInMonth = new Date(y, m + 1, 0).getDate();
   const prevMonthDays = new Date(y, m, 0).getDate();
 
