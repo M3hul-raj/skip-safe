@@ -26,7 +26,8 @@
 </p>
 
 <p align="center">
-  ⚡ <b><a href="https://m3hul-raj.github.io/skip-safe/">Launch Live App</a></b>
+  ⚡ <b><a href="https://m3hul-raj.github.io/skip-safe/">Launch Live App</a></b><br>
+  <a href="https://m3hul-raj.github.io/skip-safe/">https://m3hul-raj.github.io/skip-safe/</a>
 </p>
 
 ---
