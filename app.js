@@ -917,6 +917,13 @@ function init() {
   migrateExtras();
   viewDate = new Date();
 
+  // Brand logo tap — go to Today (current date)
+  document.querySelector('.nav-left').addEventListener('click', () => {
+    if (activeView !== 'today') switchView('today');
+    viewDate = new Date();
+    renderToday();
+  });
+
   // Tab navigation
   document.querySelectorAll('.nav-tab').forEach(t =>
     t.addEventListener('click', () => switchView(t.dataset.view)));
