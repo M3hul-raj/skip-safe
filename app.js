@@ -107,12 +107,14 @@ function load() {
     const raw = localStorage.getItem('ss_data');
     if (raw) {
       const d = JSON.parse(raw);
-      state.absences       = new Set(d.a || []);
-      state.cancellations  = new Set(d.c || []);
-      state.customHolidays = new Set(d.h || []);
-      state.extras         = new Set(d.e || []);
+      if (d && typeof d === 'object') {
+        state.absences       = new Set(Array.isArray(d.a) ? d.a : []);
+        state.cancellations  = new Set(Array.isArray(d.c) ? d.c : []);
+        state.customHolidays = new Set(Array.isArray(d.h) ? d.h : []);
+        state.extras         = new Set(Array.isArray(d.e) ? d.e : []);
+      }
     }
-  } catch (_) { /* first launch */ }
+  } catch (_) { /* fallback to defaults */ }
 }
 
 function save() {
