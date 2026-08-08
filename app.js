@@ -501,10 +501,10 @@ function openDetail(code) {
   renderCalendar(code);
 
   // Extra class date input constraints
-  const ed = document.getElementById('extra-date');
-  ed.min = SEMESTER_START;
-  ed.max = SEMESTER_END;
-  ed.value = fmt(new Date());
+  const ed = document.getElementById('extra-date-btn');
+  const dToday = new Date();
+  ed.dataset.ds = fmt(dToday);
+  ed.textContent = `${MONTH_SHORT[dToday.getMonth()]} ${dToday.getDate()}, ${dToday.getFullYear()}`;
 
   modal.dataset.subject = code;
   modal.classList.add('active');
@@ -702,9 +702,10 @@ function removeDotExtra(k) {
 }
 
 function addExtraClass() {
+  hapticTap();
   const modal = document.getElementById('subject-modal');
   const code  = modal.dataset.subject;
-  const ds    = document.getElementById('extra-date').value;
+  const ds    = document.getElementById('extra-date-btn').dataset.ds;
 
   if (!ds) { toast('Select a date'); return; }
 
@@ -1082,9 +1083,13 @@ document.addEventListener('DOMContentLoaded', init);
 // ===== DATE PICKER =====
 
 let pickerDate = new Date();
+let pickerSelectedDate = new Date();
+let _dpCallback = null;
 
-function openDatePicker() {
-  pickerDate = new Date(viewDate);
+function openDatePicker(initialDate, callback) {
+  pickerDate = new Date(initialDate);
+  pickerSelectedDate = new Date(initialDate);
+  _dpCallback = callback;
   renderDatePicker();
   document.getElementById('dp-overlay').classList.add('active');
   history.pushState({ modal: 'dp' }, '');
@@ -1092,6 +1097,7 @@ function openDatePicker() {
 
 function closeDatePicker() {
   document.getElementById('dp-overlay').classList.remove('active');
+  _dpCallback = null;
 }
 
 function renderDatePicker() {
@@ -1101,28 +1107,43 @@ function renderDatePicker() {
 
   const firstDay = new Date(y, m, 1).getDay();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const prevMonthDays = new Date(y, m, 0).getDate();
 
   let html = '';
-  for (let i = 0; i < firstDay; i++) {
-    html += `<div class="dp-cell empty"></div>`;
+  const now = new Date();
+
+  // Previous month trailing days
+  for (let i = firstDay - 1; i >= 0; i--) {
+    let d = prevMonthDays - i;
+    html += `<div class="dp-cell muted">${d}</div>`;
   }
 
-  const now = new Date();
+  // Current month days
   for (let d = 1; d <= daysInMonth; d++) {
     let cls = 'dp-cell';
     if (y === now.getFullYear() && m === now.getMonth() && d === now.getDate()) cls += ' today';
-    if (y === viewDate.getFullYear() && m === viewDate.getMonth() && d === viewDate.getDate()) cls += ' selected';
+    if (y === pickerSelectedDate.getFullYear() && m === pickerSelectedDate.getMonth() && d === pickerSelectedDate.getDate()) cls += ' selected';
+    
+    const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    if (PRESET_HOLIDAYS.has(ds)) cls += ' holiday';
 
     html += `<div class="${cls}" data-d="${d}">${d}</div>`;
+  }
+
+  // Next month leading days (to fill exactly 42 cells)
+  const remainingCells = 42 - (firstDay + daysInMonth);
+  for (let d = 1; d <= remainingCells; d++) {
+    html += `<div class="dp-cell muted">${d}</div>`;
   }
 
   const grid = document.getElementById('dp-grid');
   grid.innerHTML = html;
 
-  grid.querySelectorAll('.dp-cell:not(.empty)').forEach(cell => {
+  grid.querySelectorAll('.dp-cell:not(.muted)').forEach(cell => {
     cell.addEventListener('click', () => {
-      viewDate = new Date(y, m, parseInt(cell.dataset.d));
-      renderToday();
+      hapticTap();
+      pickerSelectedDate = new Date(y, m, parseInt(cell.dataset.d));
+      if (_dpCallback) _dpCallback(pickerSelectedDate);
       if (history.state?.modal === 'dp') history.back();
       else closeDatePicker();
     });
@@ -1130,16 +1151,24 @@ function renderDatePicker() {
 }
 
 // Bind Date Picker Events
-document.querySelector('.date-center').addEventListener('click', openDatePicker);
+document.querySelector('.date-center').addEventListener('click', () => {
+  hapticTap();
+  openDatePicker(viewDate, (d) => {
+    viewDate = d;
+    renderToday();
+  });
+});
 document.getElementById('dp-overlay-bg').addEventListener('click', () => {
   if (history.state?.modal === 'dp') history.back();
   else closeDatePicker();
 });
 document.getElementById('dp-prev').addEventListener('click', () => {
+  hapticTap();
   pickerDate.setMonth(pickerDate.getMonth() - 1);
   renderDatePicker();
 });
 document.getElementById('dp-next').addEventListener('click', () => {
+  hapticTap();
   pickerDate.setMonth(pickerDate.getMonth() + 1);
   renderDatePicker();
 });

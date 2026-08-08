@@ -117,7 +117,7 @@
                     <h3 class="sec-title">Add Extra Class</h3>
                     <p class="sec-desc">Teacher took a makeup / extra class? Add it here.</p>
                     <div class="extra-row">
-                        <input type="date" id="extra-date" class="cancel-input">
+                        <button id="extra-date-btn" class="cancel-input" style="text-align: left; padding: 0 16px;">Select Date</button>
                         <button class="extra-btn" id="extra-btn">+ Add</button>
                     </div>
                 </div>
@@ -131,13 +131,16 @@
     <!-- Action overlay (Today view mini-modal) -->
     <div id="action-overlay" class="action-overlay">
         <div class="action-overlay-bg" id="action-overlay-bg"></div>
-        <div class="action-sheet" id="action-sheet"></div>
+        <div class="action-sheet" id="action-sheet">
+            <div class="drag-handle"></div>
+        </div>
     </div>
 
     <!-- Date picker overlay -->
     <div id="dp-overlay" class="action-overlay">
         <div class="action-overlay-bg" id="dp-overlay-bg"></div>
         <div class="action-sheet dp-sheet">
+            <div class="drag-handle"></div>
             <div class="dp-header">
                 <button id="dp-prev" class="dp-nav">‹</button>
                 <div id="dp-month-year" class="dp-title"></div>
