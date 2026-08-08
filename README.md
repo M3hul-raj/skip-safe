@@ -1,15 +1,14 @@
 # Skip Safe
-<img width="1080" height="2214" alt="Screenshot_20260809-035608" src="https://github.com/user-attachments/assets/095c57bc-64e2-4900-82b5-0e49957059b5" />
-
-<img width="1080" height="2215" alt="Screenshot_20260809-040641" src="https://github.com/user-attachments/assets/2b1c08ba-2ce1-4697-a410-bd3eac5f46db" />
-
-![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)
-![PWA](https://img.shields.io/badge/PWA-ready-success.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 <p align="center">
-  <img width="1080" height="2214" alt="Screenshot_20260809-035608" src="https://github.com/user-attachments/assets/095c57bc-64e2-4900-82b5-0e49957059b5" />
-  <img width="1080" height="2215" alt="Screenshot_20260809-040641" src="https://github.com/user-attachments/assets/2b1c08ba-2ce1-4697-a410-bd3eac5f46db" />
+  <img src="https://img.shields.io/badge/version-1.0.1-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/PWA-ready-success.svg" alt="PWA">
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/095c57bc-64e2-4900-82b5-0e49957059b5" width="45%" />
+  <img src="https://github.com/user-attachments/assets/2b1c08ba-2ce1-4697-a410-bd3eac5f46db" width="45%" />
 </p>
 
 **Know exactly how many classes you can skip — and still stay above 75%.**
