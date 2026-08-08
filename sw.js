@@ -1,4 +1,4 @@
-const CACHE = 'skipsafe-v8';
+const CACHE = 'skipsafe-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -23,22 +23,36 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Stale-while-revalidate: serve from cache first, update in background
+// Network-first for own files, cache-first for external (fonts etc.)
 self.addEventListener('fetch', e => {
-  // Skip non-GET and cross-origin requests
   if (e.request.method !== 'GET') return;
 
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      const fetched = fetch(e.request).then(res => {
+  const url = new URL(e.request.url);
+  const isOwnFile = url.origin === self.location.origin;
+
+  if (isOwnFile) {
+    // Network-first: try fresh, fall back to cache
+    e.respondWith(
+      fetch(e.request).then(res => {
         if (res && res.status === 200) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => cached);
-
-      return cached || fetched;
-    })
-  );
+      }).catch(() => caches.match(e.request))
+    );
+  } else {
+    // Cache-first for external resources (fonts, etc.)
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        return cached || fetch(e.request).then(res => {
+          if (res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put(e.request, clone));
+          }
+          return res;
+        });
+      })
+    );
+  }
 });

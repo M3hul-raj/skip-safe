@@ -465,7 +465,6 @@ function openDetail(code) {
   modal.dataset.subject = code;
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
-  history.pushState(null, '', location.href);
 }
 
 function renderCalendar(code) {
@@ -706,12 +705,8 @@ function switchView(v) {
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
   document.getElementById(`${v}-view`).classList.add('active');
   document.querySelector(`.nav-tab[data-view="${v}"]`).classList.add('active');
-  if (v === 'dashboard') {
-    history.pushState(null, '', location.href);
-    renderDash();
-  } else {
-    renderToday();
-  }
+  if (v === 'dashboard') renderDash();
+  else renderToday();
 }
 
 // ===== ACTION OVERLAY (replaces inline card actions + extra picker) =====
@@ -782,7 +777,6 @@ function showActionOverlay(mode, data) {
   }
 
   overlay.classList.add('active');
-  history.pushState(null, '', location.href);
 }
 
 function closeActionOverlay() {
@@ -972,13 +966,12 @@ function init() {
     }
   }, { passive: true });
 
-  // Android back gesture handling
-  history.replaceState(null, '', location.href);
-  history.pushState(null, '', location.href);
+  // Android back gesture handling — single pushState, simple handler
+  history.pushState({ ss: true }, '', location.href);
 
   window.addEventListener('popstate', () => {
-    // Re-push so we can catch the next back
-    history.pushState(null, '', location.href);
+    // Always re-push to stay in the app
+    history.pushState({ ss: true }, '', location.href);
 
     // Close things in priority order
     const modal = document.getElementById('subject-modal');
@@ -998,7 +991,6 @@ function init() {
     // Nothing to close — double-back to exit
     const now = Date.now();
     if (now - _lastBackTime < 2000) {
-      // Actually exit
       history.go(-(history.length));
       return;
     }

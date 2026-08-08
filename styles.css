@@ -84,10 +84,10 @@ html, body {
 
 .brand-name {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 3px;
-  background: linear-gradient(90deg, #60A5FA 0%, var(--text) 40%);
+  letter-spacing: 3.5px;
+  background: linear-gradient(90deg, #60A5FA 0%, #a5b4fc 50%, var(--text) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -271,9 +271,9 @@ html, body {
 
 /* Skipped class */
 .class-card.skipped {
-  opacity: 0.6;
-  background: var(--danger-dim);
-  border-color: rgba(239,68,68,0.12);
+  opacity: 0.75;
+  background: rgba(239,68,68,0.06);
+  border-color: rgba(239,68,68,0.18);
 }
 
 .class-card.skipped::before {
@@ -282,17 +282,19 @@ html, body {
 
 .class-card.skipped .class-name {
   text-decoration: line-through;
-  text-decoration-color: rgba(239,68,68,0.5);
+  text-decoration-thickness: 2px;
+  text-decoration-color: rgba(239,68,68,0.7);
 }
 
 /* Cancelled class */
 .class-card.cancelled {
-  opacity: 0.35;
+  opacity: 0.5;
   border-style: dashed;
+  border-color: rgba(255,255,255,0.08);
 }
 
 .class-card.cancelled::before {
-  background: var(--surface-3) !important;
+  background: var(--text-3) !important;
 }
 
 /* Card time column */
@@ -327,7 +329,7 @@ html, body {
 }
 
 .class-name {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
