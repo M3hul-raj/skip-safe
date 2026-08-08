@@ -5,6 +5,10 @@
 
 // ===== CONSTANTS =====
 
+function hapticTap() {
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
 const SEMESTER_START = '2026-07-27';
 const SEMESTER_END   = '2026-11-12';
 const THRESHOLD      = 0.75;
@@ -1010,6 +1014,15 @@ function init() {
 
   // Extra class (modal)
   document.getElementById('extra-btn').addEventListener('click', addExtraClass);
+  document.getElementById('extra-date-btn').addEventListener('click', () => {
+    hapticTap();
+    const btn = document.getElementById('extra-date-btn');
+    const d = parse(btn.dataset.ds);
+    openDatePicker(d, (selectedDate) => {
+      btn.dataset.ds = fmt(selectedDate);
+      btn.textContent = `${MONTH_SHORT[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`;
+    });
+  });
 
   // Export / Import
   document.getElementById('export-btn').addEventListener('click', exportBackup);
