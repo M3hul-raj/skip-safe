@@ -219,14 +219,12 @@ function calcStats(subj) {
   const skips      = Math.max(0, R - mustAttend);
 
   let risk;
-  if (R === 0) {
-    risk = pct >= THRESHOLD * 100 ? 'safe' : 'danger';
-  } else if (skips <= 1) {
-    risk = 'danger';
-  } else if (skips <= 4) {
+  if (pct >= 75) {
+    risk = 'safe';
+  } else if (pct >= 70) {
     risk = 'warning';
   } else {
-    risk = 'safe';
+    risk = 'danger';
   }
 
   return { H, A, missed, R, pct, mustAttend, skips, risk };
@@ -452,10 +450,6 @@ function renderDash() {
     return `<div class="subject-card ${st.risk}" onclick="openDetail('${c}')">
       <div class="subject-header">
         <div class="subject-name-row">
-          <svg class="subject-ring" width="20" height="20" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
-            <circle cx="18" cy="18" r="15" fill="none" class="ring-fill ${st.risk}" stroke-width="3" stroke-dasharray="${(Math.min(100, st.pct) / 100 * 94.25).toFixed(1)} ${94.25 - (Math.min(100, st.pct) / 100 * 94.25)}" stroke-dashoffset="23.56" stroke-linecap="round"/>
-          </svg>
           <span class="subject-name">${s.name}</span>
         </div>
         <span class="subject-code">${s.code}</span>
@@ -906,6 +900,21 @@ function toggleHoliday() {
   renderToday();
 }
 
+// ===== DATE PICKER =====
+function openDatePicker(callback) {
+  const dp = document.getElementById('dp-overlay');
+  dp.classList.add('active');
+  window._dpCallback = callback;
+}
+function closeDatePicker() {
+  document.getElementById('dp-overlay').classList.remove('active');
+  window._dpCallback = null;
+}
+function pickDate(ds) {
+  if (window._dpCallback) window._dpCallback(ds);
+  closeDatePicker();
+}
+
 // cancelClass() removed — replaced by dot-based toggleDotCancel()
 
 
@@ -1031,6 +1040,10 @@ function init() {
     history.pushState({ ss: true }, '', location.href);
 
     // Close things in priority order
+    if (document.getElementById('dp-overlay').classList.contains('active')) {
+      closeDatePicker();
+      return;
+    }
     const modal = document.getElementById('subject-modal');
     if (modal && modal.classList.contains('active')) {
       closeModal();
@@ -1065,3 +1078,68 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ===== DATE PICKER =====
+
+let pickerDate = new Date();
+
+function openDatePicker() {
+  pickerDate = new Date(viewDate);
+  renderDatePicker();
+  document.getElementById('dp-overlay').classList.add('active');
+  history.pushState({ modal: 'dp' }, '');
+}
+
+function closeDatePicker() {
+  document.getElementById('dp-overlay').classList.remove('active');
+}
+
+function renderDatePicker() {
+  const y = pickerDate.getFullYear();
+  const m = pickerDate.getMonth();
+  document.getElementById('dp-month-year').textContent = `${MONTH_NAMES[m]} ${y}`;
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+  let html = '';
+  for (let i = 0; i < firstDay; i++) {
+    html += `<div class="dp-cell empty"></div>`;
+  }
+
+  const now = new Date();
+  for (let d = 1; d <= daysInMonth; d++) {
+    let cls = 'dp-cell';
+    if (y === now.getFullYear() && m === now.getMonth() && d === now.getDate()) cls += ' today';
+    if (y === viewDate.getFullYear() && m === viewDate.getMonth() && d === viewDate.getDate()) cls += ' selected';
+
+    html += `<div class="${cls}" data-d="${d}">${d}</div>`;
+  }
+
+  const grid = document.getElementById('dp-grid');
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('.dp-cell:not(.empty)').forEach(cell => {
+    cell.addEventListener('click', () => {
+      viewDate = new Date(y, m, parseInt(cell.dataset.d));
+      renderToday();
+      closeDatePicker();
+      if (history.state?.modal === 'dp') history.back();
+    });
+  });
+}
+
+// Bind Date Picker Events
+document.querySelector('.date-center').addEventListener('click', openDatePicker);
+document.getElementById('dp-overlay-bg').addEventListener('click', () => {
+  closeDatePicker();
+  if (history.state?.modal === 'dp') history.back();
+});
+document.getElementById('dp-prev').addEventListener('click', () => {
+  pickerDate.setMonth(pickerDate.getMonth() - 1);
+  renderDatePicker();
+});
+document.getElementById('dp-next').addEventListener('click', () => {
+  pickerDate.setMonth(pickerDate.getMonth() + 1);
+  renderDatePicker();
+});
