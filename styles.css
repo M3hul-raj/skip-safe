@@ -183,6 +183,8 @@ html, body {
   text-align: center;
   flex: 1;
   min-width: 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .today-day {
@@ -538,12 +540,17 @@ html, body {
   flex: 1;
 }
 
-.subject-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.subject-ring {
   flex-shrink: 0;
 }
+
+.ring-fill {
+  transition: stroke-dasharray 0.3s ease;
+}
+
+.ring-fill.safe    { stroke: var(--safe); }
+.ring-fill.warning { stroke: var(--warn); }
+.ring-fill.danger  { stroke: var(--danger); }
 
 .subject-name {
   font-size: 15px;

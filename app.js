@@ -9,10 +9,31 @@ const SEMESTER_START = '2026-07-27';
 const SEMESTER_END   = '2026-11-12';
 const THRESHOLD      = 0.75;
 
-const PRESET_HOLIDAYS = new Set([
-  '2026-08-26', '2026-08-28', '2026-09-04', '2026-09-17',
-  '2026-09-22', '2026-09-23', '2026-10-02', '2026-10-19',
-  '2026-10-20', '2026-10-21', '2026-11-09', '2026-11-11',
+const PRESET_HOLIDAYS = new Map([
+  ['2026-08-15', 'Independence Day'],
+  ['2026-08-26', 'Eid-e-Milad-un-Nabi'],
+  ['2026-08-28', 'Raksha Bandhan'],
+  ['2026-09-04', 'Janmashtami / Pantheon Fest'],
+  ['2026-09-05', 'Pantheon Fest'],
+  ['2026-09-06', 'Pantheon Fest'],
+  ['2026-09-17', 'Vishwakarma Puja'],
+  ['2026-09-22', 'Karma'],
+  ['2026-09-23', 'Karma'],
+  ['2026-10-02', 'Gandhi Jayanti'],
+  ['2026-10-17', 'Durga Puja'],
+  ['2026-10-18', 'Durga Puja'],
+  ['2026-10-19', 'Durga Puja'],
+  ['2026-10-20', 'Durga Puja'],
+  ['2026-10-21', 'Durga Puja'],
+  ['2026-11-08', 'Deepawali'],
+  ['2026-11-09', 'Goverdhan Puja'],
+  ['2026-11-11', 'Bhaiduj & Chitragupta Puja'],
+  ['2026-11-13', 'Preparatory Leave'],
+  ['2026-11-14', 'Preparatory Leave'],
+  ['2026-11-15', 'Chhath Puja & Birsa Jayanti'],
+  ['2026-11-16', 'Chhath Puja & Birsa Jayanti'],
+  ['2026-11-24', 'Guru Nanak Jayanti'],
+  ['2026-12-25', 'Christmas'],
 ]);
 
 const SUBJECTS = {
@@ -235,10 +256,26 @@ function renderToday() {
   const holBtn    = document.getElementById('holiday-toggle');
 
   // Holiday button label
-  holBtn.textContent = isHoliday(ds) ? '\u2715 Remove day off' : '+ Mark day off';
+  if (isWeekend(viewDate)) {
+    holBtn.style.display = 'none';
+  } else if (PRESET_HOLIDAYS.has(ds)) {
+    holBtn.textContent = `Official holiday \u2014 can\u2019t remove`;
+    holBtn.disabled = true;
+    holBtn.style.display = 'block';
+  } else if (state.customHolidays.has(ds)) {
+    holBtn.textContent = '\u2715 Remove day off';
+    holBtn.disabled = false;
+    holBtn.style.display = 'block';
+  } else {
+    holBtn.textContent = '+ Mark day off';
+    holBtn.disabled = false;
+    holBtn.style.display = 'block';
+  }
 
   // Determine view state
+  const isPreset   = PRESET_HOLIDAYS.has(ds);
   const isHol      = !isWeekend(viewDate) && inSemester(ds) && isHoliday(ds);
+  const holName    = isPreset ? PRESET_HOLIDAYS.get(ds) : null;
   const slots      = TIMETABLE[dow] || [];
 
   // Collect extra classes for this date (all subjects)
@@ -259,6 +296,16 @@ function renderToday() {
   emptyEl.style.display  = showEmpty   ? 'flex' : 'none';
   holEl.style.display    = isHol       ? 'flex' : 'none';
   footerEl.style.display = showFooter  ? 'flex' : 'none';
+
+  // Inject holiday name into banner
+  if (isHol) {
+    const title = holName || 'Day Off';
+    const sub   = holName ? 'Holiday · No classes today' : 'No classes today';
+    holEl.innerHTML = `
+      <div class="empty-icon holiday-glow">✦</div>
+      <p class="empty-title">${title}</p>
+      <p class="empty-sub">${sub}</p>`;
+  }
 
   // Show/hide extra class button
   const extraEl = document.getElementById('today-extra');
@@ -405,7 +452,10 @@ function renderDash() {
     return `<div class="subject-card ${st.risk}" onclick="openDetail('${c}')">
       <div class="subject-header">
         <div class="subject-name-row">
-          <span class="subject-dot" style="background:${s.color}"></span>
+          <svg class="subject-ring" width="20" height="20" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
+            <circle cx="18" cy="18" r="15" fill="none" class="ring-fill ${st.risk}" stroke-width="3" stroke-dasharray="${(Math.min(100, st.pct) / 100 * 94.25).toFixed(1)} ${94.25 - (Math.min(100, st.pct) / 100 * 94.25)}" stroke-dashoffset="23.56" stroke-linecap="round"/>
+          </svg>
           <span class="subject-name">${s.name}</span>
         </div>
         <span class="subject-code">${s.code}</span>
