@@ -465,6 +465,7 @@ function openDetail(code) {
   modal.dataset.subject = code;
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
+  history.pushState(null, '', location.href);
 }
 
 function renderCalendar(code) {
@@ -749,22 +750,32 @@ function showActionOverlay(mode, data) {
     btns += ` <button class="action-sheet-btn accent" onclick="overlayAction('addExtra','${subj}','${ds}')">+ Extra Class</button>`;
 
     sheet.innerHTML = `
-      <div class="action-sheet-title">${s.name}</div>
-      <div class="action-sheet-sub">${dateStr}</div>
+      <div class="action-sheet-head">
+        <div>
+          <div class="action-sheet-title">${s.name}</div>
+          <div class="action-sheet-sub">${dateStr}</div>
+        </div>
+        <button class="action-sheet-close" onclick="closeActionOverlay()">\u2715</button>
+      </div>
       <div class="action-sheet-btns">${btns}</div>`;
 
   } else if (mode === 'picker') {
     const ds = data.ds;
     const d = viewDate;
     sheet.innerHTML = `
-      <div class="action-sheet-title">Add extra class</div>
-      <div class="action-sheet-sub">${DAY_NAMES[d.getDay()]}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}</div>
+      <div class="action-sheet-head">
+        <div>
+          <div class="action-sheet-title">Add extra class</div>
+          <div class="action-sheet-sub">${DAY_NAMES[d.getDay()]}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}</div>
+        </div>
+        <button class="action-sheet-close" onclick="closeActionOverlay()">\u2715</button>
+      </div>
       <div class="pick-grid">
         ${Object.entries(SUBJECTS).map(([code, s]) => {
           return `<button class="pick-btn" 
             style="border-color:${s.color}40;color:${s.color}" 
             onclick="pickExtra('${code}','${ds}')">
-            ${s.short}
+            ${s.name}
           </button>`;
         }).join('')}
       </div>`;
