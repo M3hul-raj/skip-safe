@@ -3,20 +3,29 @@
 
 <img width="1080" height="2215" alt="Screenshot_20260809-040641" src="https://github.com/user-attachments/assets/2b1c08ba-2ce1-4697-a410-bd3eac5f46db" />
 
+![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)
+![PWA](https://img.shields.io/badge/PWA-ready-success.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+
+<p align="center">
+  <img width="1080" height="2214" alt="Screenshot_20260809-035608" src="https://github.com/user-attachments/assets/095c57bc-64e2-4900-82b5-0e49957059b5" />
+  <img width="1080" height="2215" alt="Screenshot_20260809-040641" src="https://github.com/user-attachments/assets/2b1c08ba-2ce1-4697-a410-bd3eac5f46db" />
+</p>
+
 **Know exactly how many classes you can skip — and still stay above 75%.**
 
-A premium, OLED-optimized attendance risk calculator built for BIT Mesra students (IMSc Mathematics & Computing, Semester IX, MO-2026). Exception-based model — mark only what you skip, not what you attend.
+An attendance risk calculator built for BIT Mesra students (IMSc Mathematics & Computing, Semester IX, MO-2026). Exception-based model — mark only what you skip, not what you attend.
 
 🔗 **Live App:** [m3hul-raj.github.io/skip-safe](https://m3hul-raj.github.io/skip-safe/)
 
 ---
 
-## 🌟 Premium Features
+## 🌟 Features
 
 | Feature | Description |
 |---------|-------------|
-| **OLED Dark Theme** | True black AMOLED-optimized design system featuring sleek gradients, smooth micro-animations, and champagne gold accents. |
-| **Smart Haptics** | Unified 10ms tactile feedback engine for day navigation, subject cards, and status changes — giving a native, premium feel. |
+| **Dark Theme** | Clean, pure-black dark theme. |
+| **Smart Haptics** | Unified 10ms tactile feedback engine for day navigation, subject cards, and status changes — giving a native feel. |
 | **Skips Remaining** | The one number that matters — per subject, updated in real-time. |
 | **Today View** | All classes for the day with dynamic color-coded risk bounds (Safe, Warning, Danger). |
 | **Dashboard** | All subjects sorted by danger level with semester progress tracking. |
@@ -37,7 +46,7 @@ Skip Safe is a Progressive Web App (PWA). You don't need the App Store or Google
 3. Select **"Add to Home Screen"**.
 4. Done! The app will now launch fullscreen like a native app and work entirely offline.
 
-> **Sharing with classmates:** Since the timetable is hardcoded for IMSc Maths & Computing Sem-IX, any classmate with the same schedule can install and use the app independently. Each person's data is stored locally and securely on their own device via `localStorage`.
+> **Note:** The current timetable is hardcoded for IMSc Maths & Computing (Sem-IX). All attendance data is processed and stored strictly locally on your own device.
 
 ---
 
@@ -72,7 +81,7 @@ You only interact with the app when something unusual happens (a skip, a cancell
 ```
 skip-safe/
 ├── index.html        # Single-page app shell
-├── styles.css        # Premium design system (Dark theme, Animations)
+├── styles.css        # Design system (Dark theme, Animations)
 ├── app.js            # Core engine (State, Math, Haptics, Rendering)
 ├── manifest.json     # PWA manifest
 ├── sw.js             # Service worker (Offline caching)
@@ -88,6 +97,8 @@ The app is currently hardcoded for **BIT Mesra IMSc Maths & Computing — Semest
 - **Semester:** Jul 27, 2026 – Nov 12, 2026
 - **Threshold Bounds:** `< 70%` (Danger), `70-74.9%` (Warning for medical relaxation), `>= 75%` (Safe).
 - **Holidays:** Pre-configured official academic calendar holidays (e.g. Pantheon Fest, Durga Puja).
+
+**Not in Sem IX? Fork this repository and update `app.js` with your own syllabus and timetable to deploy your own version.**
 
 To adapt for a different semester or course, simply fork this repo and edit the constants at the top of [`app.js`](app.js):
 - `SEMESTER_START` / `SEMESTER_END` — Date ranges
