@@ -5,8 +5,8 @@
 
 // ===== CONSTANTS =====
 
-function hapticTap(pattern = 10) {
-  if (navigator.vibrate) navigator.vibrate(pattern);
+function hapticTap() {
+  if (navigator.vibrate) navigator.vibrate(10);
 }
 
 const SEMESTER_START = '2026-07-27';
@@ -476,6 +476,7 @@ function renderDash() {
 // ===== RENDER: SUBJECT DETAIL MODAL =====
 
 function openDetail(code) {
+  hapticTap();
   const s     = SUBJECTS[code];
   const st    = calcStats(code);
   const modal = document.getElementById('subject-modal');
@@ -688,7 +689,7 @@ function undoDotSkip(k) {
 }
 
 function markDotAbsent(k) {
-  hapticTap([20, 10, 20]);
+  hapticTap();
   state.absences.add(k);
   save();
   toast('Marked as absent');
@@ -697,7 +698,7 @@ function markDotAbsent(k) {
 }
 
 function removeDotExtra(k) {
-  hapticTap([20, 10, 20]);
+  hapticTap();
   state.extras.delete(k);
   state.absences.delete(k);
   state.cancellations.delete(k);
@@ -729,12 +730,11 @@ function addExtraClass() {
 // ===== INTERACTIONS =====
 
 function toggleSkip(k) {
+  hapticTap();
   if (state.absences.has(k)) {
-    hapticTap();
     state.absences.delete(k);
     toast('Skip undone');
   } else {
-    hapticTap([20, 10, 20]);
     state.absences.add(k);
     toast('Marked as skipped');
   }
@@ -743,6 +743,7 @@ function toggleSkip(k) {
 }
 
 function navDay(n) {
+  hapticTap();
   viewDate = addDays(viewDate, n);
   renderToday();
 }
@@ -845,11 +846,7 @@ function isOverlayOpen() {
 }
 
 function overlayAction(action, key, ds) {
-  if (['cancel', 'absent', 'removeExtra'].includes(action)) {
-    hapticTap([20, 10, 20]);
-  } else {
-    hapticTap();
-  }
+  hapticTap();
   switch (action) {
     case 'cancel':
       state.cancellations.add(key);
