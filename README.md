@@ -1,19 +1,20 @@
 # Skip Safe
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.1-blue.svg" alt="Version">
-  <img src="https://img.shields.io/badge/PWA-ready-success.svg" alt="PWA">
-  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/VERSION-1.0.1-2563EB?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/PWA-READY-10B981?style=for-the-badge" alt="PWA">
+  <img src="https://img.shields.io/badge/LICENSE-MIT-171717?style=for-the-badge" alt="License">
 </p>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/095c57bc-64e2-4900-82b5-0e49957059b5" width="45%" />
-  <img src="https://github.com/user-attachments/assets/2b1c08ba-2ce1-4697-a410-bd3eac5f46db" width="45%" />
+  <img src="https://github.com/user-attachments/assets/095c57bc-64e2-4900-82b5-0e49957059b5" width="46%" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/2b1c08ba-2ce1-4697-a410-bd3eac5f46db" width="46%" />
 </p>
 
 **Know exactly how many classes you can skip — and still stay above 75%.**
 
-An attendance risk calculator built for BIT Mesra students (IMSc Mathematics & Computing, Semester IX, MO-2026). Exception-based model — mark only what you skip, not what you attend.
+An offline-first, exception-based attendance risk calculator built for BIT Mesra students (IMSc Mathematics & Computing, Semester IX, MO-2026). Mark only what you skip, not what you attend.
 
 🔗 **Live App:** [m3hul-raj.github.io/skip-safe](https://m3hul-raj.github.io/skip-safe/)
 
