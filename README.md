@@ -1,10 +1,15 @@
-# Skip Safe
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f0c29,50:302b63,100:24243e&height=180&section=header&text=Skip%20Safe&fontSize=50&fontColor=00D4FF&fontAlignY=40&desc=BIT%20Mesra%20Attendance%20Risk%20Calculator&descSize=16&descAlignY=65&descColor=ffffff" width="100%" />
+</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/VERSION-1.0.1-2563EB?style=for-the-badge" alt="Version">
-  <img src="https://img.shields.io/badge/PWA-READY-10B981?style=for-the-badge" alt="PWA">
-  <img src="https://img.shields.io/badge/LICENSE-MIT-171717?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/badge/VERSION-1.0.1-00599C?style=for-the-badge&logo=github&logoColor=white" alt="Version" />
+  <img src="https://img.shields.io/badge/PWA-READY-00C853?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA" />
+  <img src="https://img.shields.io/badge/STACK-VANILLA%20JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="Stack" />
+  <img src="https://img.shields.io/badge/LICENSE-MIT-20232A?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="License" />
 </p>
+
+<br/>
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/095c57bc-64e2-4900-82b5-0e49957059b5" width="46%" />
@@ -12,15 +17,21 @@
   <img src="https://github.com/user-attachments/assets/2b1c08ba-2ce1-4697-a410-bd3eac5f46db" width="46%" />
 </p>
 
-**Know exactly how many classes you can skip — and still stay above 75%.**
+<br/>
 
-An offline-first, exception-based attendance risk calculator built for BIT Mesra students (IMSc Mathematics & Computing, Semester IX, MO-2026). Mark only what you skip, not what you attend.
+<h3 align="center">Know exactly how many classes you can skip — and still stay above 75%.</h3>
 
-🔗 **Live App:** [m3hul-raj.github.io/skip-safe](https://m3hul-raj.github.io/skip-safe/)
+<p align="center">
+  An offline-first, exception-based attendance risk calculator built for BIT Mesra students (IMSc Mathematics & Computing, Semester IX, MO-2026). Mark only what you skip, not what you attend.
+</p>
+
+<p align="center">
+  ⚡ <b><a href="https://m3hul-raj.github.io/skip-safe/">Launch Live App</a></b>
+</p>
 
 ---
 
-## 🌟 Features
+## ⚡ Features
 
 | Feature | Description |
 |---------|-------------|
@@ -78,7 +89,7 @@ You only interact with the app when something unusual happens (a skip, a cancell
 
 ## 📂 Project Structure
 
-```
+```text
 skip-safe/
 ├── index.html        # Single-page app shell
 ├── styles.css        # Design system (Dark theme, Animations)
@@ -115,6 +126,8 @@ To adapt for a different semester or course, simply fork this repo and edit the 
 - **Zero Tracking:** No tracking scripts, analytics, or servers.
 - **Export Control:** You own your data. Use Export/Import to migrate seamlessly.
 
-## License
+---
+
+## 📜 License
 
 MIT
