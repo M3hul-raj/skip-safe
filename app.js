@@ -1123,8 +1123,8 @@ function renderDatePicker() {
     cell.addEventListener('click', () => {
       viewDate = new Date(y, m, parseInt(cell.dataset.d));
       renderToday();
-      closeDatePicker();
       if (history.state?.modal === 'dp') history.back();
+      else closeDatePicker();
     });
   });
 }
@@ -1132,8 +1132,8 @@ function renderDatePicker() {
 // Bind Date Picker Events
 document.querySelector('.date-center').addEventListener('click', openDatePicker);
 document.getElementById('dp-overlay-bg').addEventListener('click', () => {
-  closeDatePicker();
   if (history.state?.modal === 'dp') history.back();
+  else closeDatePicker();
 });
 document.getElementById('dp-prev').addEventListener('click', () => {
   pickerDate.setMonth(pickerDate.getMonth() - 1);
