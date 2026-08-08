@@ -1,4 +1,7 @@
 # Skip Safe
+<img width="1080" height="2214" alt="Screenshot_20260809-035608" src="https://github.com/user-attachments/assets/095c57bc-64e2-4900-82b5-0e49957059b5" />
+
+<img width="1080" height="2215" alt="Screenshot_20260809-040641" src="https://github.com/user-attachments/assets/2b1c08ba-2ce1-4697-a410-bd3eac5f46db" />
 
 **Know exactly how many classes you can skip — and still stay above 75%.**
 
