@@ -1,10 +1,11 @@
-const CACHE = 'skipsafe-v1.0.1';
+const CACHE = 'skipsafe-v1.0.2';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
-  './manifest.json'
+  './manifest.json',
+  './icon-180.png'
 ];
 
 // Pre-cache assets on install
@@ -31,14 +32,15 @@ self.addEventListener('fetch', e => {
   const isOwnFile = url.origin === self.location.origin;
 
   if (isOwnFile) {
-    // Network-first: try fresh, fall back to cache
+    // Network-first: try fresh, fall back to cache on failure or bad response
     e.respondWith(
       fetch(e.request).then(res => {
-        if (res && res.status === 200) {
+        if (res && res.ok) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
+          return res;
         }
-        return res;
+        return caches.match(e.request).then(cached => cached || res);
       }).catch(() => caches.match(e.request))
     );
   } else {

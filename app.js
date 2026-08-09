@@ -108,22 +108,27 @@ function load() {
     if (raw) {
       const d = JSON.parse(raw);
       if (d && typeof d === 'object') {
-        state.absences       = new Set(Array.isArray(d.a) ? d.a : []);
-        state.cancellations  = new Set(Array.isArray(d.c) ? d.c : []);
-        state.customHolidays = new Set(Array.isArray(d.h) ? d.h : []);
-        state.extras         = new Set(Array.isArray(d.e) ? d.e : []);
+        const stringsOnly = arr => Array.isArray(arr) ? arr.filter(x => typeof x === 'string') : [];
+        state.absences       = new Set(stringsOnly(d.a));
+        state.cancellations  = new Set(stringsOnly(d.c));
+        state.customHolidays = new Set(stringsOnly(d.h));
+        state.extras         = new Set(stringsOnly(d.e));
       }
     }
   } catch (_) { /* fallback to defaults */ }
 }
 
 function save() {
-  localStorage.setItem('ss_data', JSON.stringify({
-    a: [...state.absences],
-    c: [...state.cancellations],
-    h: [...state.customHolidays],
-    e: [...state.extras],
-  }));
+  try {
+    localStorage.setItem('ss_data', JSON.stringify({
+      a: [...state.absences],
+      c: [...state.cancellations],
+      h: [...state.customHolidays],
+      e: [...state.extras],
+    }));
+  } catch (_) {
+    toast('Could not save — storage full or unavailable');
+  }
 }
 
 // Migrate old EXTRA keys to EXTRA-1 format
@@ -233,7 +238,9 @@ function calcStats(subj) {
     risk = 'danger';
   }
 
-  return { H, A, missed, R, pct, mustAttend, skips, risk };
+  const isRecoveryImpossible = mustAttend > R;
+
+  return { H, A, missed, R, pct, mustAttend, skips, risk, isRecoveryImpossible };
 }
 
 
@@ -360,7 +367,7 @@ function renderToday() {
         <div class="class-body">
           <div class="class-top">
             <span class="class-name">${subj.name}</span>
-            <span class="class-pct ${st.risk}">${st.pct.toFixed(0)}%</span>
+            <span class="class-pct ${st.risk}">${st.pct.toFixed(1)}%</span>
           </div>
           <div class="class-bottom">
             <span class="class-meta">${subj.code} \u00B7 ${sl.isLab ? 'Lab' : 'Room ' + sl.room}</span>
@@ -400,7 +407,7 @@ function renderToday() {
         <div class="class-body">
           <div class="class-top">
             <span class="class-name">${subj.name}<span class="extra-badge">EXTRA</span></span>
-            <span class="class-pct ${st.risk}">${st.pct.toFixed(0)}%</span>
+            <span class="class-pct ${st.risk}">${st.pct.toFixed(1)}%</span>
           </div>
           <div class="class-bottom">
             <span class="class-meta">${subj.code} \u00B7 Extra Class</span>
@@ -497,11 +504,13 @@ function openDetail(code) {
       <div class="modal-stat"><span class="modal-stat-value">${st.mustAttend}</span><span class="modal-stat-label">Must Attend</span></div>
     </div>
     <div class="modal-explain">
-      Out of <strong>${st.R}</strong> remaining classes, you must attend at least
+      ${st.isRecoveryImpossible
+        ? `<span class="danger-text">Reaching 75% is no longer possible this semester. You would need to attend <strong>${st.mustAttend}</strong> of <strong>${st.R}</strong> remaining classes.</span>`
+        : `Out of <strong>${st.R}</strong> remaining classes, you must attend at least
       <strong>${st.mustAttend}</strong> to stay above 75%.
       ${st.skips > 0
         ? ` You can safely skip <strong>${st.skips}</strong> more.`
-        : ' <span class="danger-text">You cannot skip any more classes.</span>'}
+        : ' <span class="danger-text">You cannot skip any more classes.</span>'}`}
     </div>`;
 
   // Calendar history
@@ -914,21 +923,6 @@ function toggleHoliday() {
   renderToday();
 }
 
-// ===== DATE PICKER =====
-function openDatePicker(callback) {
-  const dp = document.getElementById('dp-overlay');
-  dp.classList.add('active');
-  window._dpCallback = callback;
-}
-function closeDatePicker() {
-  document.getElementById('dp-overlay').classList.remove('active');
-  window._dpCallback = null;
-}
-function pickDate(ds) {
-  if (window._dpCallback) window._dpCallback(ds);
-  closeDatePicker();
-}
-
 // cancelClass() removed — replaced by dot-based toggleDotCancel()
 
 
@@ -986,6 +980,9 @@ function toast(msg) {
 // ===== INIT =====
 
 function init() {
+  // Enable iOS Safari :active pseudo-class on elements outside #main
+  document.addEventListener('touchstart', () => {}, { passive: true });
+
   load();
   migrateExtras();
   viewDate = new Date();
