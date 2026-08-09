@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/VERSION-1.0.1-00599C?style=for-the-badge&logo=github&logoColor=white" alt="Version" />
+  <img src="https://img.shields.io/badge/VERSION-1.0.2-00599C?style=for-the-badge&logo=github&logoColor=white" alt="Version" />
   <img src="https://img.shields.io/badge/PWA-READY-00C853?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA" />
   <img src="https://img.shields.io/badge/STACK-VANILLA%20JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="Stack" />
   <img src="https://img.shields.io/badge/LICENSE-MIT-20232A?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="License" />
@@ -81,7 +81,7 @@ You only interact with the app when something unusual happens (a skip, a cancell
 - **Frontend:** Vanilla HTML5 + CSS3 + JavaScript (No framework bloat, zero dependencies)
 - **Styling:** Custom fluid design system built for mobile
 - **Fonts:** [Inter](https://fonts.google.com/specimen/Inter) + [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono)
-- **PWA:** `manifest.json` (v1.0.0) + Service Worker (`sw.js`) utilizing stale-while-revalidate caching.
+- **PWA:** `manifest.json` (v1.0.2) + Service Worker (`sw.js`) with network-first caching and offline fallback.
 - **Storage:** Secure `localStorage` with fail-safe data hydration. Zero server dependency.
 - **Deployment:** GitHub Pages (auto-deploy on push to `main`)
 - **Total Payload:** < 55 KB (all assets combined)
@@ -97,6 +97,7 @@ skip-safe/
 ├── app.js            # Core engine (State, Math, Haptics, Rendering)
 ├── manifest.json     # PWA manifest
 ├── sw.js             # Service worker (Offline caching)
+├── icon-180.png      # Apple touch icon (180×180)
 └── README.md         # Documentation
 ```
 
