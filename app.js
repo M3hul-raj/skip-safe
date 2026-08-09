@@ -501,7 +501,7 @@ function openDetail(code) {
       <div class="modal-stat"><span class="modal-stat-value">${st.pct.toFixed(1)}%</span><span class="modal-stat-label">Current</span></div>
       <div class="modal-stat ${st.risk}"><span class="modal-stat-value">${st.skips}</span><span class="modal-stat-label">Skips Left</span></div>
       <div class="modal-stat"><span class="modal-stat-value">${st.R}</span><span class="modal-stat-label">Remaining</span></div>
-      <div class="modal-stat"><span class="modal-stat-value">${st.mustAttend}</span><span class="modal-stat-label">Must Attend</span></div>
+      <div class="modal-stat${st.isRecoveryImpossible ? ' danger' : ''}"><span class="modal-stat-value">${st.mustAttend}</span><span class="modal-stat-label">Must Attend</span></div>
     </div>
     <div class="modal-explain">
       ${st.isRecoveryImpossible
