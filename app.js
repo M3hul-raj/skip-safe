@@ -102,13 +102,15 @@ let _lastBackTime = 0;
 
 // ===== PERSISTENCE =====
 
+/** Sanitise an array from untrusted sources — keep only strings. */
+const stringsOnly = arr => Array.isArray(arr) ? arr.filter(x => typeof x === 'string') : [];
+
 function load() {
   try {
     const raw = localStorage.getItem('ss_data');
     if (raw) {
       const d = JSON.parse(raw);
       if (d && typeof d === 'object') {
-        const stringsOnly = arr => Array.isArray(arr) ? arr.filter(x => typeof x === 'string') : [];
         state.absences       = new Set(stringsOnly(d.a));
         state.cancellations  = new Set(stringsOnly(d.c));
         state.customHolidays = new Set(stringsOnly(d.h));
@@ -953,10 +955,10 @@ function importBackup(file) {
   reader.onload = e => {
     try {
       const d = JSON.parse(e.target.result);
-      state.absences       = new Set(d.absences || []);
-      state.cancellations  = new Set(d.cancellations || []);
-      state.customHolidays = new Set(d.customHolidays || []);
-      state.extras         = new Set(d.extras || []);
+      state.absences       = new Set(stringsOnly(d.absences));
+      state.cancellations  = new Set(stringsOnly(d.cancellations));
+      state.customHolidays = new Set(stringsOnly(d.customHolidays));
+      state.extras         = new Set(stringsOnly(d.extras));
       save();
       toast('Backup restored');
       if (activeView === 'dashboard') renderDash(); else renderToday();
