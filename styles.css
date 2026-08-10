@@ -1261,9 +1261,9 @@ html, body {
 /* ===== TOAST ===== */
 .toast {
   position: fixed;
-  bottom: calc(24px + var(--safe-b));
+  top: calc(var(--nav-h) + 8px + env(safe-area-inset-top, 0px));
   left: 50%;
-  transform: translateX(-50%) translateY(80px);
+  transform: translateX(-50%) translateY(-80px);
   padding: 10px 22px;
   background: var(--surface-2);
   border: 1px solid var(--border-2);

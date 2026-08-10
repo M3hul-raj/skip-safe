@@ -6,7 +6,7 @@
 // ===== CONSTANTS =====
 
 function hapticTap() {
-  if (navigator.vibrate) navigator.vibrate([12, 40, 12]);
+  if (navigator.vibrate) navigator.vibrate(15);
 }
 
 const SEMESTER_START = '2026-07-27';
@@ -1094,9 +1094,15 @@ function init() {
   // Initial render
   renderToday();
 
-  // Register service worker
+  // Register service worker (only in production; unregister on localhost to avoid stale cache during development)
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        for (const reg of regs) reg.unregister();
+      });
+    } else {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
   }
 }
 
