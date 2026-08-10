@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/VERSION-1.0.4-00599C?style=for-the-badge&logo=github&logoColor=white" alt="Version" />
+  <img src="https://img.shields.io/badge/VERSION-1.0.5-00599C?style=for-the-badge&logo=github&logoColor=white" alt="Version" />
   <img src="https://img.shields.io/badge/PWA-READY-00C853?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA" />
   <img src="https://img.shields.io/badge/STACK-VANILLA%20JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="Stack" />
   <img src="https://img.shields.io/badge/LICENSE-MIT-20232A?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="License" />

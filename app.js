@@ -6,7 +6,7 @@
 // ===== CONSTANTS =====
 
 function hapticTap() {
-  if (navigator.vibrate) navigator.vibrate(10);
+  if (navigator.vibrate) navigator.vibrate([12, 40, 12]);
 }
 
 const SEMESTER_START = '2026-07-27';
@@ -229,7 +229,8 @@ function calcStats(subj) {
 
   const pct        = H > 0 ? (A / H) * 100 : 100;
   const mustAttend = Math.max(0, Math.ceil(THRESHOLD * (H + R) - A));
-  const skips      = Math.max(0, R - mustAttend);
+  const plannedMiss = remaining.filter(c => state.absences.has(c.k)).length;
+  const skips      = Math.max(0, R - mustAttend - plannedMiss);
 
   let risk;
   if (pct >= 75) {
@@ -240,7 +241,7 @@ function calcStats(subj) {
     risk = 'danger';
   }
 
-  const isRecoveryImpossible = mustAttend > R;
+  const isRecoveryImpossible = mustAttend > (R - plannedMiss);
 
   return { H, A, missed, R, pct, mustAttend, skips, risk, isRecoveryImpossible };
 }
