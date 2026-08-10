@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f0c29,50:302b63,100:24243e&height=200&section=header&text=Skip%20Safe&fontSize=42&fontColor=00D4FF&fontAlignY=40&desc=BIT%20Mesra%20Attendance%20Risk%20Calculator&descSize=16&descAlignY=65&descColor=ffffff" width="100%" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f0c29,50:302b63,100:24243e&height=250&section=header&text=Skip%20Safe&fontSize=50&fontColor=00D4FF&fontAlignY=40&desc=BIT%20Mesra%20Attendance%20Risk%20Calculator&descSize=16&descAlignY=65&descColor=ffffff" width="100%" />
 </p>
 
 <p align="center">
