@@ -1,11 +1,14 @@
-const CACHE = 'skipsafe-v1.0.6';
+const CACHE = 'skipsafe-v1.0.7';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
   './manifest.json',
-  './icon-180.png'
+  './icon-180.png',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-maskable-512.png'
 ];
 
 // Pre-cache assets on install
