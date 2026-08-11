@@ -1,10 +1,11 @@
 {
   "name": "Skip Safe",
-  "short_name": "SkipSafe",
-  "version": "1.0.7",
+  "short_name": "Skip Safe",
+  "version": "1.0.8",
   "description": "Know exactly how many classes you can skip",
   "start_url": "./index.html",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#050508",
   "theme_color": "#050508",
