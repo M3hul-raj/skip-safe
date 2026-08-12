@@ -129,7 +129,7 @@ To adapt for a different semester or course, simply fork this repo and edit the 
 
 - **100% Local:** All data is stored strictly in your browser's local storage.
 - **Zero Tracking:** No tracking scripts, analytics, or servers.
-- **Data loss risk:** Nothing is backed up anywhere. Clearing your browser's site data, uninstalling the browser app, or wiping your phone will permanently delete your attendance history with no way to recover it. Removing the app icon from your home screen does NOT delete your data, the browser still holds it, but clearing the browser itself does.
+- `**Data loss risk`:*` Nothing is backed up anywhere. Clearing your browser's site data, uninstalling the browser app, or wiping your phone will permanently delete your attendance history with no way to recover it. Removing the app icon from your home screen does NOT delete your data, the browser still holds it, but clearing the browser itself does.
 - **Export regularly:** Use Export as an actual backup habit, not just when switching devices. It's the only copy of your data that exists outside your browser.
 
 ---
