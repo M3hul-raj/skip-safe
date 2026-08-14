@@ -80,7 +80,7 @@ const TIMETABLE = {
   5: [ // Friday
     { period: 'IV',  start: '11:00', end: '11:50', subject: 'MA502', room: '215' },
     { period: 'V',   start: '12:00', end: '12:50', subject: 'MA501', room: '215' },
-    { period: 'LAB', start: '13:30', end: '17:20', subject: 'CA602', room: 'Lab 6', isLab: true },
+    { period: 'LAB', start: '14:30', end: '17:20', subject: 'CA602', room: 'Lab 6', isLab: true },
   ],
 };
 
@@ -956,10 +956,10 @@ function importBackup(file) {
   reader.onload = e => {
     try {
       const d = JSON.parse(e.target.result);
-      state.absences       = new Set(stringsOnly(d.absences));
-      state.cancellations  = new Set(stringsOnly(d.cancellations));
-      state.customHolidays = new Set(stringsOnly(d.customHolidays));
-      state.extras         = new Set(stringsOnly(d.extras));
+      state.absences       = new Set(stringsOnly(d.absences || d.a));
+      state.cancellations  = new Set(stringsOnly(d.cancellations || d.c));
+      state.customHolidays = new Set(stringsOnly(d.customHolidays || d.h));
+      state.extras         = new Set(stringsOnly(d.extras || d.e));
       save();
       toast('Backup restored');
       if (activeView === 'dashboard') renderDash(); else renderToday();
@@ -1153,7 +1153,7 @@ function renderDatePicker() {
     if (y === pickerSelectedDate.getFullYear() && m === pickerSelectedDate.getMonth() && d === pickerSelectedDate.getDate()) cls += ' selected';
     
     const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    if (PRESET_HOLIDAYS.has(ds)) cls += ' holiday';
+    if (isHoliday(ds)) cls += ' holiday';
 
     html += `<div class="${cls}" data-d="${d}">${d}</div>`;
   }
@@ -1192,11 +1192,11 @@ document.getElementById('dp-overlay-bg').addEventListener('click', () => {
 });
 document.getElementById('dp-prev').addEventListener('click', () => {
   hapticTap();
-  pickerDate.setMonth(pickerDate.getMonth() - 1);
+  pickerDate = new Date(pickerDate.getFullYear(), pickerDate.getMonth() - 1, 1);
   renderDatePicker();
 });
 document.getElementById('dp-next').addEventListener('click', () => {
   hapticTap();
-  pickerDate.setMonth(pickerDate.getMonth() + 1);
+  pickerDate = new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 1);
   renderDatePicker();
 });
